@@ -63,7 +63,7 @@ public class MinecraftMojo extends AbstractMojo {
          * Valid values are: client, server
          */
         @Parameter
-        private List<String> modules = Arrays.asList("client", "server");
+        private List<String> modules = Arrays.asList("server");
 
         /**
          * Specifies the game version to download and map.
