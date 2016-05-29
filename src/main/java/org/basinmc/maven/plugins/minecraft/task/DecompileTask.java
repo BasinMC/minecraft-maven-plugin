@@ -16,6 +16,8 @@
  */
 package org.basinmc.maven.plugins.minecraft.task;
 
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.basinmc.maven.plugins.minecraft.MinecraftMojo;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
@@ -179,6 +181,7 @@ public class DecompileTask extends AbstractTask {
         class MojoDecompiler implements IBytecodeProvider, IResultSaver {
                 private final ZipFile inputFile;
                 private final Path outputPath;
+                private final Formatter formatter = new Formatter();
 
                 public MojoDecompiler(@Nonnull Path outputPath, @Nonnull ZipFile inputFile) {
                         this.outputPath = outputPath;
@@ -204,6 +207,10 @@ public class DecompileTask extends AbstractTask {
                 public void copyEntry(String source, String path, String archiveName, String entryName) {
                         ZipEntry entry = this.inputFile.getEntry(entryName);
                         Path outputPath = this.outputPath.resolve(path).resolve(entryName);
+
+                        if (!entryName.startsWith("assets") && !entryName.startsWith("net") && !entryName.equals("log4j2.xml") && !entryName.equals("yggdrasil_session_pubkey.der") && !entry.getName().equals("pack.png")) {
+                                return;
+                        }
 
                         try {
                                 Files.createDirectories(outputPath.getParent());
@@ -271,6 +278,16 @@ public class DecompileTask extends AbstractTask {
                 @Override
                 public void saveClassFile(String path, String qualifiedName, String entryName, String content, int[] mapping) {
                         Path entryPath = this.outputPath.resolve(path).resolve(entryName);
+
+                        if (!qualifiedName.startsWith("net")) {
+                                return;
+                        }
+
+                        try {
+                                content = this.formatter.formatSource(content);
+                        } catch (FormatterException ex) {
+                                DecompilerContext.getLogger().writeMessage("Cannot format file " + entryName, ex);
+                        }
 
                         try {
                                 Files.createDirectories(entryPath.getParent());
