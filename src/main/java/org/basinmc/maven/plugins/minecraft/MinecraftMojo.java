@@ -95,7 +95,7 @@ public class MinecraftMojo extends AbstractMojo {
         /**
          * Declares the directory the generated sources are written to.
          */
-        @Parameter(defaultValue = "${project.basedir}/src/minecraft/")
+        @Parameter(defaultValue = "${project.basedir}/target/generated-sources/minecraft/")
         private File sourceOutputDirectory;
 
         /**
