@@ -111,68 +111,6 @@ public class DecompileTask extends AbstractTask {
                 }
         }
 
-        // This is the procyon version of this implementation
-        // We will probably want to use this instead of Fernflower in the future (if it ever gets fixed sufficiently
-        // enough for us to deal with it)
-        /* private void decompile(@Nonnull String module, @Nonnull Path jarOutputDirectory, @Nonnull Path sourceOutputDirectory) throws IOException {
-                Path outputDirectory = sourceOutputDirectory.resolve(module);
-                Files.createDirectories(outputDirectory);
-
-                Formatter formatter = new Formatter();
-
-                try (JarFile file = new JarFile(jarOutputDirectory.resolve(module + "_mapped.jar").toFile())) {
-                        final DecompilerSettings settings = DecompilerSettings.javaDefaults();
-                        settings.setTypeLoader(new JarTypeLoader(file));
-
-                        Enumeration<? extends ZipEntry> entries = file.entries();
-
-                        while (entries.hasMoreElements()) {
-                                ZipEntry entry = entries.nextElement();
-                                Path entryPath = outputDirectory.resolve(entry.getName());
-
-                                if (entry.isDirectory()) {
-                                        continue;
-                                }
-
-                                if (!entry.getName().endsWith(".class")) {
-                                        this.getLog().info("Copying resource " + entry.getName());
-                                        Files.createDirectories(entryPath.getParent());
-
-                                        try (InputStream inputStream = file.getInputStream(entry)) {
-                                                try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
-                                                        try (FileChannel outputChannel = FileChannel.open(entryPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-                                                                outputChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
-                                                        }
-                                                }
-                                        }
-
-                                        continue;
-                                }
-
-                                this.getLog().info("Decompiling " + entry.getName());
-                                entryPath = entryPath.resolveSibling(entry.getName().substring(0, (entry.getName().length() - 6)) + ".java");
-                                Files.createDirectories(entryPath.getParent()); // let's do this twice to stop Java from doing stupid stuff
-
-                                try (FileChannel outputChannel = FileChannel.open(entryPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-                                        StringWriter codeWriter = new StringWriter();
-
-                                        Decompiler.decompile(entry.getName().substring(0, (entry.getName().length() - 6)), new PlainTextOutput(codeWriter), settings);
-
-                                        codeWriter.close();
-                                        String code = codeWriter.toString();
-
-                                        try {
-                                                code = formatter.formatSource(code);
-                                        } catch (FormatterException ex) {
-                                                this.getLog().warn("Could not format code using the stock code formatter - Falling back to default style!", ex);
-                                        }
-
-                                        outputChannel.write(ByteBuffer.wrap(code.getBytes(this.getMojo().getEncoding())));
-                                }
-                        }
-                }
-        } */
-
         /**
          * <strong>Mojo Decompiler</strong>
          *
