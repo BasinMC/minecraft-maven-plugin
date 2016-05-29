@@ -22,8 +22,10 @@ import org.basinmc.maven.plugins.minecraft.MinecraftMojo;
 import org.basinmc.maven.plugins.minecraft.task.mapping.McpMapping;
 import org.basinmc.maven.plugins.minecraft.task.mapping.SrgMapping;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 
 import javax.annotation.Nonnull;
 import java.io.FileInputStream;
@@ -146,10 +148,39 @@ public class MappingTask extends AbstractTask {
                 ClassReader reader = new ClassReader(inputStream);
 
                 ClassRemapper mcpRemapper = new ClassRemapper(writer, mcpMapping);
-                ClassRemapper srgRemapper = new ClassRemapper(mcpRemapper, srgMapping);
+                ClassRemapper srgRemapper = new FixedClassRemapper(mcpRemapper, srgMapping);
 
                 reader.accept(srgRemapper, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
 
                 outputStream.write(writer.toByteArray());
+        }
+
+        /**
+         * <strong>Fixed Class Remapper</strong>
+         *
+         * Works around a bug in ASM 5 which prevents class remapping from being executed properly (e.g. inner classes
+         * are only partially handled).
+         */
+        public static class FixedClassRemapper extends ClassRemapper {
+
+                public FixedClassRemapper(ClassVisitor cv, Remapper remapper) {
+                        super(cv, remapper);
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void visitInnerClass(String name, String outerName, String innerName, int access) {
+                        if (innerName != null) {
+                                innerName = remapper.mapType(innerName);
+
+                                if (innerName.indexOf('/') != -1) {
+                                        innerName = innerName.substring(innerName.lastIndexOf('/') + 1);
+                                }
+                        }
+
+                        super.visitInnerClass(remapper.mapType(name), (outerName == null ? null : remapper.mapType(outerName)), innerName, access);
+                }
         }
 }
