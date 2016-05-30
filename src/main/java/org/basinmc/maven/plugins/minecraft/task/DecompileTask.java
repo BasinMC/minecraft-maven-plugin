@@ -59,7 +59,7 @@ public class DecompileTask extends AbstractTask {
                 Path inputPath = jarOutputDirectory.resolve(module + "_mapped.jar");
                 Files.createDirectories(outputDirectory);
 
-                ConsoleDecompiler.main(new String[] { "-din=1", "-rbr=0", "-dgs=1", "-asc=1", "-log=ERROR", inputPath.toAbsolutePath().toString(), outputDirectory.toAbsolutePath().toString() });
+                ConsoleDecompiler.main(new String[] { "-din=1", "-rbr=0", "-rsy=1", "-dgs=1", "-asc=1", "-log=ERROR", inputPath.toAbsolutePath().toString(), outputDirectory.toAbsolutePath().toString() });
 
                 try (ZipFile file = new ZipFile(outputDirectory.resolve(module + "_mapped.jar").toFile())) {
                         Enumeration<? extends ZipEntry> enumeration = file.entries();
