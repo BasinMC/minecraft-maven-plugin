@@ -55,6 +55,8 @@ public class DecompileTask extends AbstractTask {
          * @throws IOException when an error occurs.
          */
         private void decompile(@Nonnull String module, @Nonnull Path jarOutputDirectory, @Nonnull Path sourceOutputDirectory) throws IOException {
+                this.getLog().info("Decompiling " + module + " ...");
+
                 Path outputDirectory = sourceOutputDirectory.resolve(module);
                 Path inputPath = jarOutputDirectory.resolve(module + "_mapped.jar");
                 Files.createDirectories(outputDirectory);
@@ -91,6 +93,8 @@ public class DecompileTask extends AbstractTask {
 
                 Files.deleteIfExists(outputDirectory.resolve(module + "_mapped.jar"));
                 this.getMojo().getProject().addCompileSourceRoot(outputDirectory.toString());
+
+                this.getLog().info("Decompiled " + module);
         }
 
         /**
