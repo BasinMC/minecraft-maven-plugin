@@ -16,26 +16,21 @@
  */
 package org.basinmc.maven.plugins.minecraft.task;
 
-import com.google.common.io.ByteStreams;
+import net.md_5.specialsource.Jar;
+import net.md_5.specialsource.JarMapping;
+import net.md_5.specialsource.JarRemapper;
+import net.md_5.specialsource.SpecialSource;
+import net.md_5.specialsource.provider.JarProvider;
+import net.md_5.specialsource.provider.JointProvider;
+import net.md_5.specialsource.transformer.MinecraftCodersPack;
 import org.apache.maven.plugin.MojoFailureException;
 import org.basinmc.maven.plugins.minecraft.MinecraftMojo;
-import org.basinmc.maven.plugins.minecraft.task.mapping.McpMapping;
-import org.basinmc.maven.plugins.minecraft.task.mapping.SrgMapping;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.Remapper;
 
 import javax.annotation.Nonnull;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * <strong>Mapping Task</strong>
@@ -82,105 +77,28 @@ public class MappingTask extends AbstractTask {
          * @throws IOException when remapping fails.
          */
         private void mapArtifact(@Nonnull String side, @Nonnull Path srgPath, @Nonnull Path mcpPath) throws IOException {
-                SrgMapping srgMapping = new SrgMapping(srgPath.resolve("joined.csrg"));
-                McpMapping mcpMapping = new McpMapping(side, mcpPath.resolve("fields.csv"), mcpPath.resolve("methods.csv"));
+                Path fieldMappingPath = mcpPath.resolve("fields.csv");
+                Path methodMappingPath = mcpPath.resolve("methods.csv");
 
                 Path filePath = this.getMojo().getJarOutputDirectory().toPath().resolve(side + ".jar");
                 Path outputPath = this.getMojo().getJarOutputDirectory().toPath().resolve(side + "_mapped.jar");
 
-                try (FileInputStream fileInputStream = new FileInputStream(filePath.toFile())) {
-                        try (ZipInputStream inputStream = new ZipInputStream(fileInputStream)) {
-                                try (FileOutputStream fileOutputStream = new FileOutputStream(outputPath.toFile())) {
-                                        try (ZipOutputStream outputStream = new ZipOutputStream(fileOutputStream)) {
-                                                ZipEntry entry;
+                SpecialSource.kill_lvt = true;
+                SpecialSource.kill_source = true;
 
-                                                while ((entry = inputStream.getNextEntry()) != null) {
-                                                        if (entry.isDirectory()) {
-                                                                if (this.getLog().isDebugEnabled()) {
-                                                                        this.getLog().debug("Creating directory " + entry.getName());
-                                                                }
+                MinecraftCodersPack outputTransformer = new MinecraftCodersPack(fieldMappingPath.toFile(), methodMappingPath.toFile(), null);
 
-                                                                outputStream.putNextEntry(entry);
-                                                                continue;
-                                                        }
+                JarMapping mapping = new JarMapping();
+                mapping.loadMappings(new BufferedReader(new FileReader(srgPath.resolve("joined.csrg").toFile())), null, outputTransformer, false);
 
-                                                        if (entry.getName().toUpperCase().endsWith(".RSA") || entry.getName().toUpperCase().endsWith(".SF")) {
-                                                                if (this.getLog().isDebugEnabled()) {
-                                                                        this.getLog().debug("Skipping signature file " + entry.getName());
-                                                                }
+                JarRemapper remapper = new JarRemapper(mapping);
 
-                                                                continue;
-                                                        }
+                Jar jar = Jar.init(filePath.toFile());
 
-                                                        if (!entry.getName().endsWith(".class")) {
-                                                                if (this.getLog().isDebugEnabled()) {
-                                                                        this.getLog().debug("Copying resource " + entry.getName());
-                                                                }
+                JointProvider inheritanceProvider = new JointProvider();
+                inheritanceProvider.add(new JarProvider(jar));
+                mapping.setFallbackInheritanceProvider(inheritanceProvider);
 
-                                                                outputStream.putNextEntry(entry);
-                                                                ByteStreams.copy(inputStream, outputStream);
-                                                                continue;
-                                                        }
-
-                                                        this.getLog().info("Remapping " + entry.getName());
-                                                        ZipEntry outputEntry = new ZipEntry(srgMapping.mapType(entry.getName().substring(0, entry.getName().lastIndexOf('.'))) + ".class");
-
-                                                        outputStream.putNextEntry(outputEntry);
-                                                        this.mapClass(inputStream, outputStream, srgMapping, mcpMapping);
-                                                }
-                                        }
-                                }
-                        }
-                }
-        }
-
-        /**
-         * Maps a single class.
-         *
-         * @param inputStream  an input stream.
-         * @param outputStream an output stream.
-         * @param srgMapping   an SRG mapping.
-         * @param mcpMapping   an MCP mapping.
-         * @throws IOException when remapping the class fails.
-         */
-        public void mapClass(@Nonnull InputStream inputStream, @Nonnull ZipOutputStream outputStream, @Nonnull SrgMapping srgMapping, @Nonnull McpMapping mcpMapping) throws IOException {
-                ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-                ClassReader reader = new ClassReader(inputStream);
-
-                ClassRemapper mcpRemapper = new ClassRemapper(writer, mcpMapping);
-                ClassRemapper srgRemapper = new FixedClassRemapper(mcpRemapper, srgMapping);
-
-                reader.accept(srgRemapper, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
-
-                outputStream.write(writer.toByteArray());
-        }
-
-        /**
-         * <strong>Fixed Class Remapper</strong>
-         *
-         * Works around a bug in ASM 5 which prevents class remapping from being executed properly (e.g. inner classes
-         * are only partially handled).
-         */
-        public static class FixedClassRemapper extends ClassRemapper {
-
-                public FixedClassRemapper(ClassVisitor cv, Remapper remapper) {
-                        super(cv, remapper);
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void visitInnerClass(String name, String outerName, String innerName, int access) {
-                        if (innerName != null) {
-                                innerName = remapper.mapType(innerName);
-
-                                if (innerName.indexOf('/') != -1) {
-                                        innerName = innerName.substring(innerName.lastIndexOf('/') + 1);
-                                }
-                        }
-
-                        super.visitInnerClass(remapper.mapType(name), (outerName == null ? null : remapper.mapType(outerName)), innerName, access);
-                }
+                remapper.remapJar(jar, outputPath.toFile());
         }
 }

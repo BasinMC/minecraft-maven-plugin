@@ -16,32 +16,20 @@
  */
 package org.basinmc.maven.plugins.minecraft.task;
 
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.FormatterException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.basinmc.maven.plugins.minecraft.MinecraftMojo;
-import org.jetbrains.java.decompiler.main.DecompilerContext;
-import org.jetbrains.java.decompiler.main.Fernflower;
-import org.jetbrains.java.decompiler.main.decompiler.PrintStreamLogger;
-import org.jetbrains.java.decompiler.main.extern.IBytecodeProvider;
-import org.jetbrains.java.decompiler.main.extern.IResultSaver;
-import org.jetbrains.java.decompiler.util.InterpreterUtil;
+import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.Manifest;
+import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -71,25 +59,37 @@ public class DecompileTask extends AbstractTask {
                 Path inputPath = jarOutputDirectory.resolve(module + "_mapped.jar");
                 Files.createDirectories(outputDirectory);
 
-                Map<String, Object> options = new HashMap<>();
-                options.put("dgs", 1);
-                options.put("hdc", 0);
-                options.put("rbr", 0);
-                options.put("asc", 1);
-                options.put("udv", 0);
+                ConsoleDecompiler.main(new String[] { "-din=1", "-rbr=0", "-dgs=1", "-asc=1", "-log=ERROR", inputPath.toAbsolutePath().toString(), outputDirectory.toAbsolutePath().toString() });
 
-                // Fixme: Slightly hacky .... .... blame sycholic
-                MojoDecompiler decompiler = new MojoDecompiler(outputDirectory, new ZipFile(inputPath.toFile()));
-                Fernflower fernflower = new Fernflower(decompiler, decompiler, options, new PrintStreamLogger(System.out));
+                try (ZipFile file = new ZipFile(outputDirectory.resolve(module + "_mapped.jar").toFile())) {
+                        Enumeration<? extends ZipEntry> enumeration = file.entries();
 
-                fernflower.getStructContext().addSpace(inputPath.toFile(), true);
+                        while (enumeration.hasMoreElements()) {
+                                ZipEntry entry = enumeration.nextElement();
+                                Path filePath = outputDirectory.resolve(entry.getName());
 
-                try {
-                        fernflower.decompileContext();
-                } finally {
-                        fernflower.clearContext();
+                                if (!entry.getName().startsWith("assets") && !entry.getName().startsWith("net") && !entry.getName().startsWith("log4j2.xml") && !entry.getName().startsWith("yggdrasil_session_pubkey.der")) {
+                                        continue;
+                                }
+
+                                if (entry.isDirectory()) {
+                                        Files.createDirectories(filePath);
+                                        continue;
+                                }
+
+                                Files.createDirectories(filePath.getParent());
+
+                                try (InputStream inputStream = file.getInputStream(entry)) {
+                                        try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
+                                                try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                                                        fileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+                                                }
+                                        }
+                                }
+                        }
                 }
 
+                Files.deleteIfExists(outputDirectory.resolve(module + "_mapped.jar"));
                 this.getMojo().getProject().addCompileSourceRoot(outputDirectory.toString());
         }
 
@@ -108,153 +108,6 @@ public class DecompileTask extends AbstractTask {
                         }
                 } catch (IOException ex) {
                         throw new MojoFailureException("Cannot de-compile one or more files: " + ex.getMessage(), ex);
-                }
-        }
-
-        /**
-         * <strong>Mojo Decompiler</strong>
-         *
-         * Provides an extended version of Fernflower's console based decompiler.
-         */
-        class MojoDecompiler implements IBytecodeProvider, IResultSaver {
-                private final ZipFile inputFile;
-                private final Path outputPath;
-                private final Formatter formatter = new Formatter();
-
-                public MojoDecompiler(@Nonnull Path outputPath, @Nonnull ZipFile inputFile) {
-                        this.outputPath = outputPath;
-                        this.inputFile = inputFile;
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void closeArchive(String path, String archiveName) {
-                        try {
-                                this.inputFile.close();
-                        } catch (IOException e) {
-                                e.printStackTrace();
-                        }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void copyEntry(String source, String path, String archiveName, String entryName) {
-                        ZipEntry entry = this.inputFile.getEntry(entryName);
-                        Path outputPath = this.outputPath.resolve(path).resolve(entryName);
-
-                        if (!entryName.startsWith("assets") && !entryName.startsWith("net") && !entryName.equals("log4j2.xml") && !entryName.equals("yggdrasil_session_pubkey.der") && !entry.getName().equals("pack.png")) {
-                                return;
-                        }
-
-                        try {
-                                Files.createDirectories(outputPath.getParent());
-
-                                try (InputStream inputStream = this.inputFile.getInputStream(entry)) {
-                                        try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
-                                                try (FileChannel outputChannel = FileChannel.open(outputPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-                                                        outputChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
-                                                }
-                                        }
-                                }
-                        } catch (IOException ex) {
-                                String message = "Cannot copy entry " + entryName + " from " + source;
-                                DecompilerContext.getLogger().writeMessage(message, ex);
-                        }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void copyFile(String source, String path, String entryName) {
-                        try {
-                                InterpreterUtil.copyFile(new File(source), this.outputPath.resolve(path).resolve(entryName).toFile());
-                        } catch (IOException ex) {
-                                DecompilerContext.getLogger().writeMessage("Cannot copy " + source + " to " + entryName, ex);
-                        }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void createArchive(String path, String archiveName, Manifest manifest) {
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public byte[] getBytecode(String externalPath, String internalPath) throws IOException {
-                        File file = new File(externalPath);
-
-                        if (internalPath == null) {
-                                return InterpreterUtil.getBytes(file);
-                        } else {
-                                ZipEntry entry = this.inputFile.getEntry(internalPath);
-                                if (entry == null) throw new IOException("Entry not found: " + internalPath);
-
-                                return InterpreterUtil.getBytes(this.inputFile, entry);
-                        }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void saveClassEntry(String path, String archiveName, String qualifiedName, String entryName, String content) {
-                        this.saveClassFile(path, qualifiedName, entryName, content, new int[0]);
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void saveClassFile(String path, String qualifiedName, String entryName, String content, int[] mapping) {
-                        Path entryPath = this.outputPath.resolve(path).resolve(entryName);
-
-                        if (!qualifiedName.startsWith("net")) {
-                                return;
-                        }
-
-                        try {
-                                content = this.formatter.formatSource(content);
-                        } catch (FormatterException ex) {
-                                DecompilerContext.getLogger().writeMessage("Cannot format file " + entryName, ex);
-                        }
-
-                        try {
-                                Files.createDirectories(entryPath.getParent());
-
-                                try (FileChannel outputChannel = FileChannel.open(entryPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
-                                        outputChannel.write(ByteBuffer.wrap(content.getBytes(StandardCharsets.UTF_8))); // TODO: Maybe configure the character set?
-                                }
-                        } catch (IOException ex) {
-                                DecompilerContext.getLogger().writeMessage("Cannot write class file " + entryName, ex);
-                        }
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void saveDirEntry(String path, String archiveName, String entryName) {
-                }
-
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void saveFolder(String path) {
-                        try {
-                                Files.createDirectories(this.outputPath.resolve(path));
-                        } catch (IOException ex) {
-                                throw new RuntimeException("Cannot create directory: " + ex.getMessage(), ex);
-                        }
                 }
         }
 }
