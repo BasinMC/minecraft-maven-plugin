@@ -52,12 +52,10 @@ public class MappingTask extends AbstractTask {
         @Override
         public void execute() throws MojoFailureException {
                 try {
-                        if (this.getMojo().getModules().contains("client")) {
+                        if (this.getMojo().getModule().equalsIgnoreCase("client")) {
                                 this.getLog().info("Remapping client module.");
                                 this.mapArtifact("client", this.getMojo().getMappingOutputDirectory().toPath().resolve("srg"), this.getMojo().getMappingOutputDirectory().toPath().resolve("mcp"));
-                        }
-
-                        if (this.getMojo().getModules().contains("server")) {
+                        } else if (this.getMojo().getModule().equalsIgnoreCase("server")) {
                                 this.getLog().info("Remapping server module.");
                                 this.mapArtifact("server", this.getMojo().getMappingOutputDirectory().toPath().resolve("srg"), this.getMojo().getMappingOutputDirectory().toPath().resolve("mcp"));
                         }

@@ -116,12 +116,10 @@ public class DownloadTask extends AbstractTask {
         @Override
         public void execute() throws MojoFailureException {
                 try {
-                        if (this.getMojo().getModules().contains("client")) {
+                        if (this.getMojo().getModule().equalsIgnoreCase("client")) {
                                 this.getLog().info("Downloading client (this may take a long time)");
                                 this.downloadArtifact("client", CLIENT_JAR_LOCATION_TEMPLATE, this.getMojo().getGameVersion(), this.getMojo().getJarOutputDirectory().toPath());
-                        }
-
-                        if (this.getMojo().getModules().contains("server")) {
+                        } else if (this.getMojo().getModule().equalsIgnoreCase("server")) {
                                 this.getLog().info("Downloading server (this may take a long time)");
                                 this.downloadArtifact("server", SERVER_JAR_LOCATION_TEMPLATE, this.getMojo().getGameVersion(), this.getMojo().getJarOutputDirectory().toPath());
                         }

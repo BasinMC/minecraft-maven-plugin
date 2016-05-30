@@ -99,11 +99,9 @@ public class DecompileTask extends AbstractTask {
         @Override
         public void execute() throws MojoFailureException {
                 try {
-                        if (this.getMojo().getModules().contains("client")) {
+                        if (this.getMojo().getModule().equalsIgnoreCase("client")) {
                                 this.decompile("client", this.getMojo().getJarOutputDirectory().toPath(), this.getMojo().getSourceOutputDirectory().toPath());
-                        }
-
-                        if (this.getMojo().getModules().contains("server")) {
+                        } else if (this.getMojo().getModule().equalsIgnoreCase("server")) {
                                 this.decompile("server", this.getMojo().getJarOutputDirectory().toPath(), this.getMojo().getSourceOutputDirectory().toPath());
                         }
                 } catch (IOException ex) {

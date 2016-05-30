@@ -29,8 +29,6 @@ import org.basinmc.maven.plugins.minecraft.task.MappingTask;
 
 import javax.annotation.Nonnull;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * <strong>Minecraft Mojo</strong>
@@ -63,7 +61,7 @@ public class MinecraftMojo extends AbstractMojo {
          * Valid values are: client, server
          */
         @Parameter
-        private List<String> modules = Arrays.asList("server");
+        private String module = "server";
 
         /**
          * Specifies the game version to download and map.
@@ -128,8 +126,8 @@ public class MinecraftMojo extends AbstractMojo {
         }
 
         @Nonnull
-        public List<String> getModules() {
-                return modules;
+        public String getModule() {
+                return this.module;
         }
 
         @Nonnull
