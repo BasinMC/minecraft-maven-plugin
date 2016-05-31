@@ -103,11 +103,7 @@ public class DecompileTask extends AbstractTask {
         @Override
         public void execute() throws MojoFailureException {
                 try {
-                        if (this.getMojo().getModule().equalsIgnoreCase("client")) {
-                                this.decompile("client", this.getMojo().getJarOutputDirectory().toPath(), this.getMojo().getSourceOutputDirectory().toPath());
-                        } else if (this.getMojo().getModule().equalsIgnoreCase("server")) {
-                                this.decompile("server", this.getMojo().getJarOutputDirectory().toPath(), this.getMojo().getSourceOutputDirectory().toPath());
-                        }
+                        this.decompile(this.getMojo().getModule(), this.getMojo().getJarOutputDirectory().toPath(), this.getMojo().getSourceOutputDirectory().toPath());
                 } catch (IOException ex) {
                         throw new MojoFailureException("Cannot de-compile one or more files: " + ex.getMessage(), ex);
                 }

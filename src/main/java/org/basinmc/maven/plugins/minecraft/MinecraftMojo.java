@@ -26,6 +26,7 @@ import org.apache.maven.project.MavenProject;
 import org.basinmc.maven.plugins.minecraft.task.DecompileTask;
 import org.basinmc.maven.plugins.minecraft.task.DownloadTask;
 import org.basinmc.maven.plugins.minecraft.task.MappingTask;
+import org.basinmc.maven.plugins.minecraft.task.RepositoryTask;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -109,6 +110,10 @@ public class MinecraftMojo extends AbstractMojo {
         public void execute() throws MojoExecutionException, MojoFailureException {
                 this.getLog().info("Minecraft Version: " + this.gameVersion);
                 this.getLog().info("Mapping Version: " + this.mappingVersion);
+
+                if (!this.module.equalsIgnoreCase("client") && !this.module.equalsIgnoreCase("server")) {
+                        throw new MojoFailureException("Invalid module identifier: " + this.module);
+                }
 
                 (new DownloadTask(this)).execute();
                 (new MappingTask(this)).execute();
