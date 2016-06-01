@@ -68,10 +68,9 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
          */
         private void applyPatches() throws MojoFailureException {
                 this.getLog().info("Applying all known patches");
-                int statusCode;
 
                 try {
-                        if (Files.walk(this.sourceDirectory.toPath(), 1).filter((p) -> p.getFileName().toString().endsWith(".patch")).count() == 0) {
+                        if (Files.walk(this.patchDirectory.toPath(), 1).filter((p) -> p.getFileName().toString().endsWith(".patch")).count() == 0) {
                                 this.getLog().warn("No patch files found - Skipping patch phase");
                                 return;
                         }
@@ -79,18 +78,34 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
                         throw new MojoFailureException("Could not inspect patch directory: " + ex.getMessage(), ex);
                 }
 
-                String patchPattern = this.patchDirectory.toString();
+                try {
+                        Files.walk(this.patchDirectory.toPath()).filter((p) -> p.getFileName().toString().endsWith(".patch"))
+                                .forEachOrdered((p) -> {
+                                        try {
+                                                p = this.sourceDirectory.toPath().relativize(p);
 
-                if (!patchPattern.endsWith("/")) {
-                        patchPattern += "/";
-                }
+                                                this.getLog().info("Applying " + p.getFileName().toString());
 
-                patchPattern += "*.patch";
+                                                // Note: This is one of the only commands which aren't supported by JGit and thus we will need to rely
+                                                // on the git executable in the user's environment
+                                                int statusCode;
+                                                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "am", "--ignore-whitespace", "--3way", p.toString()).directory(this.sourceDirectory))) != 0) {
+                                                        throw new MojoFailureException("Git returned an unexpected status: " + statusCode);
+                                                }
+                                        } catch (MojoFailureException ex) {
+                                                throw new RuntimeException(ex);
+                                        }
+                                });
+                } catch (RuntimeException ex) {
+                        Throwable cause = ex.getCause();
 
-                // Note: This is one of the only commands which aren't supported by JGit and thus we will need to rely
-                // on the git executable in the user's environment
-                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "am", "--3way", patchPattern).directory(this.sourceDirectory))) != 0) {
-                        throw new MojoFailureException("Git returned an unexpected status: " + statusCode);
+                        if (cause instanceof MojoFailureException) {
+                                throw (MojoFailureException) cause;
+                        }
+
+                        throw ex;
+                } catch (IOException ex) {
+                        throw new MojoFailureException("Could not inspect patch files: " + ex.getMessage());
                 }
         }
 
