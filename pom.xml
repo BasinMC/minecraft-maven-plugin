@@ -30,7 +30,7 @@
 
         <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-                <maven.version>3.3.9</maven.version>
+                <maven.version>2.2.1</maven.version>
         </properties>
 
         <licenses>
