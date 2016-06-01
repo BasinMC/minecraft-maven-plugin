@@ -122,6 +122,13 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
                 } catch (GitAPIException ex) {
                         throw new MojoFailureException("Could not commit changes: " + ex.getMessage(), ex);
                 }
+
+                try {
+                        this.getLog().info("Creating an upstream branch to compare against");
+                        git.branchCreate().setName("upstream").call();
+                } catch (GitAPIException ex) {
+                        throw new MojoFailureException("Could not create branch: " + ex.getMessage(), ex);
+                }
         }
 
         /**
