@@ -69,7 +69,7 @@ public class DownloadMinecraftMojo extends AbstractMinecraftMojo {
                                 this.generateArtifactDescriptor(pomPath, this.module);
                                 this.installArtifact(this.module, pomPath, artifactPath);
                         } else {
-                                this.getLog().info("Found cached version of net.minecraft:" + this.module + ":" + this.gameVersion);
+                                this.getLog().info("Found cached version of " + MINECRAFT_GROUP_ID + ":" + this.module + ":" + this.gameVersion);
                         }
                 } catch (IOException ex) {
                         throw new MojoFailureException("Could not create temporary file: " + ex.getMessage(), ex);

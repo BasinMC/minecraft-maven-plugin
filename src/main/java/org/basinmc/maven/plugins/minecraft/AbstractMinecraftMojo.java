@@ -70,7 +70,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
          *
          * Specifies the group identifier cached artifacts will be installed to.
          */
-        public static final String MINECRAFT_GROUP_ID = "net.minecraft";
+        public static final String MINECRAFT_GROUP_ID = "org.basinmc.minecraft";
         /**
          * <strong>Source Suffix</strong>
          *
