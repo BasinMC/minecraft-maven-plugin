@@ -114,6 +114,13 @@
                                                         <goal>download</goal>
                                                 </goals>
                                         </execution>
+                                        <execution>
+                                                <id>minecraft-decompile</id>
+
+                                                <goals>
+                                                        <goal>decompile</goal>
+                                                </goals>
+                                        </execution>
                                 </executions>
                         </plugin>
                 </plugins>
