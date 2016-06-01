@@ -32,6 +32,13 @@ import org.apache.maven.project.MavenProject;
 public abstract class AbstractMinecraftMojo extends AbstractMojo {
 
         /**
+         * <strong>Minecraft Group ID</strong>
+         *
+         * Specifies the group identifier cached artifacts will be installed to.
+         */
+        public static final String MINECRAFT_GROUP_ID = "net.minecraft";
+
+        /**
          * Specifies the game version to download and map.
          */
         @Parameter(defaultValue = "1.9.4")
