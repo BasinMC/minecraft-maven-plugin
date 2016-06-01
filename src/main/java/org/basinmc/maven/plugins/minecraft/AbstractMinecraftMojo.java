@@ -155,16 +155,18 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         /**
          * Generates an artifact descriptor.
          *
-         * @param pomPath a temporary descriptor path.
+         * @param pomPath       a temporary descriptor path.
+         * @param artifactId    an artifact identifier.
+         * @param versionSuffix a version suffix.
          * @throws MojoFailureException when an error occurs while attempting to generate the descriptor.
          */
-        protected void generateArtifactDescriptor(@Nonnull Path pomPath, @Nonnull String artifactId) throws MojoFailureException {
-                this.getLog().info("Generating maven artifact descriptor for net.minecraft:" + artifactId + ":" + this.gameVersion);
+        protected void generateArtifactDescriptor(@Nonnull Path pomPath, @Nonnull String artifactId, @Nonnull String versionSuffix) throws MojoFailureException {
+                this.getLog().info("Generating maven artifact descriptor for net.minecraft:" + artifactId + ":" + this.gameVersion + versionSuffix);
                 Model model = new Model();
 
                 model.setGroupId(MINECRAFT_GROUP_ID);
                 model.setArtifactId(artifactId);
-                model.setVersion(this.gameVersion);
+                model.setVersion(this.gameVersion + versionSuffix);
                 model.setPackaging("jar");
 
                 Organization organization = new Organization();
@@ -188,18 +190,44 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         }
 
         /**
+         * Generates an artifact descriptor.
+         *
+         * @param pomPath    a temporary descriptor path.
+         * @param artifactId an artifact identifier.
+         * @throws MojoFailureException when an error occurs while attempting to generate the descriptor.
+         */
+        protected void generateArtifactDescriptor(@Nonnull Path pomPath, @Nonnull String artifactId) throws MojoFailureException {
+                this.generateArtifactDescriptor(pomPath, artifactId, "");
+        }
+
+        /**
          * Installs an artifact to the local repository.
          *
          * @param artifactId   an artifact identifier.
          * @param pomPath      a temporary descriptor path.
          * @param artifactPath a temporary artifact path.
-         * @return The generated artifact.
+         * @return the generated artifact.
          *
          * @throws MojoFailureException when an error occurs while attempting to install the artifact.
          */
         protected Artifact installArtifact(@Nonnull String artifactId, @Nonnull Path pomPath, @Nonnull Path artifactPath) throws MojoFailureException {
-                this.getLog().info("Installing net.minecraft:" + artifactId + ":" + this.gameVersion + " to local repository");
-                Artifact artifact = this.artifactFactory.createArtifact(MINECRAFT_GROUP_ID, artifactId, this.gameVersion, "compile", "jar");
+                return this.installArtifact(artifactId, "", pomPath, artifactPath);
+        }
+
+        /**
+         * Instals an artifact to the local repository.
+         *
+         * @param artifactId    an artifact identifier.
+         * @param versionSuffix a version suffix.
+         * @param pomPath       a temporary descriptor path.
+         * @param artifactPath  a temporary artifact path.
+         * @return the generated artifact.
+         *
+         * @throws MojoFailureException when an error occurs while attempting to install the artifact.
+         */
+        protected Artifact installArtifact(@Nonnull String artifactId, @Nonnull String versionSuffix, @Nonnull Path pomPath, @Nonnull Path artifactPath) throws MojoFailureException {
+                this.getLog().info("Installing net.minecraft:" + artifactId + ":" + this.gameVersion + versionSuffix + " to local repository");
+                Artifact artifact = this.artifactFactory.createArtifact(MINECRAFT_GROUP_ID, artifactId, this.gameVersion + versionSuffix, "compile", "jar");
 
                 ArtifactMetadata metadata = new ProjectArtifactMetadata(artifact, pomPath.toFile());
                 artifact.addMetadata(metadata);
@@ -237,8 +265,21 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
          */
         @Nonnull
         protected Optional<Artifact> locateArtifact(@Nonnull String artifactId) throws ArtifactResolutionException {
+                return this.locateArtifact(artifactId, "");
+        }
+
+        /**
+         * Locates an artifact in the local repository.
+         *
+         * @param artifactId    an artifact identifier.
+         * @param versionSuffix a version suffix.
+         * @return an artifact or, if no local version was found, an empty optional.
+         *
+         * @throws ArtifactResolutionException when the artifact resolution fails.
+         */
+        protected Optional<Artifact> locateArtifact(@Nonnull String artifactId, @Nonnull String versionSuffix) throws ArtifactResolutionException {
                 try {
-                        Artifact artifact = this.artifactFactory.createBuildArtifact(MINECRAFT_GROUP_ID, artifactId, this.gameVersion, "jar");
+                        Artifact artifact = this.artifactFactory.createBuildArtifact(MINECRAFT_GROUP_ID, artifactId, this.gameVersion + versionSuffix, "jar");
                         this.artifactResolver.resolve(artifact, Collections.emptyList(), this.session.getLocalRepository());
                         return Optional.of(artifact);
                 } catch (ArtifactNotFoundException ex) {

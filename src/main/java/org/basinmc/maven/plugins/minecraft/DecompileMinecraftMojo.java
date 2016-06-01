@@ -109,8 +109,8 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         remapper.remapJar(jar, mappedArtifact.toFile());
 
                         // store the resulting jar in the local repository
-                        this.generateArtifactDescriptor(mappedArtifactDescriptor, this.module + MAPPED_SUFFIX);
-                        this.installArtifact(this.module + MAPPED_SUFFIX, mappedArtifactDescriptor, mappedArtifact);
+                        this.generateArtifactDescriptor(mappedArtifactDescriptor, this.module + MAPPED_SUFFIX, "-" + this.mcpVersion);
+                        this.installArtifact(this.module + MAPPED_SUFFIX, "-" + this.mcpVersion, mappedArtifactDescriptor, mappedArtifact);
 
                         // clean up all remaining temporary files
                         try {
@@ -149,15 +149,15 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
         private void createSourceArtifact() throws MojoFailureException {
                 try {
                         // locate a mapped artifact or create a fresh version
-                        Optional<Path> mappedArtifactOptional = this.locateArtifact(module + MAPPED_SUFFIX).map((a) -> a.getFile().toPath());
+                        Optional<Path> mappedArtifactOptional = this.locateArtifact(module + MAPPED_SUFFIX, "-" + this.mcpVersion).map((a) -> a.getFile().toPath());
 
                         if (!mappedArtifactOptional.isPresent()) {
-                                this.getLog().info("No cached version of net.minecraft:" + module + MAPPED_SUFFIX + ":" + this.gameVersion + " found in local repository");
+                                this.getLog().info("No cached version of net.minecraft:" + module + MAPPED_SUFFIX + ":" + this.gameVersion + "-" + this.mcpVersion + " found in local repository");
                                 this.createMappedArtifact();
 
-                                mappedArtifactOptional = this.locateArtifact(module + MAPPED_SUFFIX).map((a) -> a.getFile().toPath());
+                                mappedArtifactOptional = this.locateArtifact(module + MAPPED_SUFFIX, "-" + this.mcpVersion).map((a) -> a.getFile().toPath());
                         } else {
-                                this.getLog().info("Found cached version of net.minecraft:" + module + MAPPED_SUFFIX + ":" + this.gameVersion + " found in local repository");
+                                this.getLog().info("Found cached version of net.minecraft:" + module + MAPPED_SUFFIX + ":" + this.gameVersion + "-" + this.mcpVersion + " found in local repository");
                         }
 
                         Path mappedArtifact = mappedArtifactOptional.get();
@@ -200,8 +200,8 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         Files.createDirectories(sourceOutputDirectory);
                         ConsoleDecompiler.main(new String[]{"-din=1", "-rbr=0", "-rsy=1", "-dgs=1", "-asc=1", "-log=ERROR", strippedArtifact.toAbsolutePath().toString(), sourceOutputDirectory.toAbsolutePath().toString()});
 
-                        this.generateArtifactDescriptor(sourceArtifactDescriptor, this.module + SOURCE_SUFFIX);
-                        this.installArtifact(this.module + SOURCE_SUFFIX, sourceArtifactDescriptor, sourceOutputDirectory.resolve("minecraft_stripped.jar"));
+                        this.generateArtifactDescriptor(sourceArtifactDescriptor, this.module + SOURCE_SUFFIX, "-" + this.mcpVersion);
+                        this.installArtifact(this.module + SOURCE_SUFFIX, "-" + this.mcpVersion, sourceArtifactDescriptor, sourceOutputDirectory.resolve("minecraft_stripped.jar"));
 
                         try {
                                 Files.deleteIfExists(strippedArtifact);
@@ -238,15 +238,15 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                 super.execute();
 
                 try {
-                        Optional<Path> sourceArtifactOptional = this.locateArtifact(module + SOURCE_SUFFIX).map((a) -> a.getFile().toPath());
+                        Optional<Path> sourceArtifactOptional = this.locateArtifact(module + SOURCE_SUFFIX, "-" + this.mcpVersion).map((a) -> a.getFile().toPath());
 
                         if (!sourceArtifactOptional.isPresent()) {
-                                this.getLog().info("No cached version of net.minecraft:" + module + SOURCE_SUFFIX + ":" + this.gameVersion + " found in local repository");
+                                this.getLog().info("No cached version of net.minecraft:" + module + SOURCE_SUFFIX + ":" + this.gameVersion + "-" + this.mcpVersion + " found in local repository");
                                 this.createSourceArtifact();
 
-                                sourceArtifactOptional = this.locateArtifact(module + SOURCE_SUFFIX).map((a) -> a.getFile().toPath());
+                                sourceArtifactOptional = this.locateArtifact(module + SOURCE_SUFFIX, "-" + this.mcpVersion).map((a) -> a.getFile().toPath());
                         } else {
-                                this.getLog().info("Found cached version of net.minecraft:" + module + SOURCE_SUFFIX + ":" + this.gameVersion + " in local repository");
+                                this.getLog().info("Found cached version of net.minecraft:" + module + SOURCE_SUFFIX + ":" + this.gameVersion + "-" + this.mcpVersion + " in local repository");
                         }
 
                         this.getLog().info("Extracting sources");
