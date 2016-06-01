@@ -166,7 +166,24 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
          */
         protected int executeCommand(@Nonnull ProcessBuilder builder) throws MojoFailureException {
                 try {
-                        return builder.start().waitFor();
+                        Process process = builder.start();
+                        int statusCode = process.waitFor();
+
+                        if (statusCode != 0) {
+                                try (InputStream inputStream = process.getErrorStream()) {
+                                        try (InputStreamReader reader = new InputStreamReader(inputStream)) {
+                                                try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+                                                        String line;
+
+                                                        while ((line = bufferedReader.readLine()) != null) {
+                                                                this.getLog().error(line);
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+
+                        return statusCode;
                 } catch (IOException ex) {
                         throw new MojoFailureException("Could not execute command: " + ex.getMessage(), ex);
                 } catch (InterruptedException ex) {
