@@ -104,15 +104,14 @@
                                 <version>1.0-SNAPSHOT</version>
 
                                 <configuration>
-                                        <mappingVersion>snapshot-20160528</mappingVersion>
                                 </configuration>
 
                                 <executions>
                                         <execution>
-                                                <id>minecraft</id>
+                                                <id>minecraft-download</id>
 
                                                 <goals>
-                                                        <goal>minecraft</goal>
+                                                        <goal>download</goal>
                                                 </goals>
                                         </execution>
                                 </executions>
