@@ -20,12 +20,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.InitCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /**
  * <strong>Git Patch Mojo</strong>
@@ -111,9 +113,46 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
 
                 try {
                         this.getLog().info("Adding all sources to the repository");
-                        git.add().addFilepattern("*.java").call();
+                        AddCommand command = git.add();
+
+                        Files.walkFileTree(this.sourceDirectory.toPath(), new SimpleFileVisitor<Path>() {
+
+                                /**
+                                 * {@inheritDoc}
+                                 */
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                        if (!file.getFileName().toString().endsWith(".java") && !file.getFileName().toString().endsWith(".xml")) {
+                                                getLog().info("Skipping " + file.getFileName().toString());
+                                                return FileVisitResult.CONTINUE;
+                                        }
+
+                                        file = sourceDirectory.toPath().relativize(file);
+
+                                        getLog().info("Adding " + file.toString());
+                                        command.addFilepattern(file.toString().replace('\\', '/'));
+
+                                        return FileVisitResult.CONTINUE;
+                                }
+
+                                /**
+                                 * {@inheritDoc}
+                                 */
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                        if (dir.getFileName().toString().endsWith(".git")) {
+                                                return FileVisitResult.SKIP_SUBTREE;
+                                        }
+
+                                        return super.preVisitDirectory(dir, attrs);
+                                }
+                        });
+
+                        command.call();
                 } catch (GitAPIException ex) {
                         throw new MojoFailureException("Could not add vanilla source to the repository: " + ex.getMessage(), ex);
+                } catch (IOException ex) {
+                        throw new MojoFailureException("Could not inspect source directory: " + ex.getMessage(), ex);
                 }
 
                 try {
