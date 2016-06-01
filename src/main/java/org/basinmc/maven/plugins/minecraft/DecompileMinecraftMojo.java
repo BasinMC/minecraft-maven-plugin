@@ -53,7 +53,6 @@ import java.util.zip.ZipOutputStream;
  */
 @Mojo(
         name = "decompile",
-        requiresProject = false,
         threadSafe = true,
         defaultPhase = LifecyclePhase.GENERATE_SOURCES
 )
@@ -251,6 +250,8 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
 
                         this.getLog().info("Extracting sources");
                         this.extract(sourceArtifactOptional.get(), this.sourceDirectory.toPath());
+
+                        this.project.addCompileSourceRoot(this.sourceDirectory.toString());
                 } catch (ArtifactResolutionException ex) {
                         throw new MojoFailureException("Could not resolve source artifact: " + ex.getMessage(), ex);
                 } catch (IOException ex) {
