@@ -108,6 +108,13 @@
 
                                 <executions>
                                         <execution>
+                                                <id>minecraft-safeguard</id>
+
+                                                <goals>
+                                                        <goal>git-safeguard</goal>
+                                                </goals>
+                                        </execution>
+                                        <execution>
                                                 <id>minecraft-download</id>
 
                                                 <goals>
