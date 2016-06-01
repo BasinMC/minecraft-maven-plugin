@@ -100,13 +100,17 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         @Parameter(defaultValue = "server")
         protected String module;
         /**
+         * Specifies the directory to read patches from/store patches in.
+         */
+        @Parameter(defaultValue = "${project.basedir}/src/minecraft/patch")
+        protected File patchDirectory;
+        /**
          * Stores a reference to the project's configuration.
          */
         @Parameter(property = "project", required = true, readonly = true)
         protected MavenProject project;
         @Component
         private MavenSession session;
-
         /**
          * Specifies the source output directory.
          */
@@ -153,6 +157,35 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         }
 
         /**
+         * Executes a command based on the process builder specifications.
+         *
+         * @param builder a builder.
+         * @return a return value.
+         *
+         * @throws MojoFailureException when the execution fails.
+         */
+        protected int executeCommand(@Nonnull ProcessBuilder builder) throws MojoFailureException {
+                try {
+                        return builder.start().waitFor();
+                } catch (IOException ex) {
+                        throw new MojoFailureException("Could not execute command: " + ex.getMessage(), ex);
+                } catch (InterruptedException ex) {
+                        throw new MojoFailureException("Interrupted while awaiting command result: " + ex.getMessage(), ex);
+                }
+        }
+
+        /**
+         * Generates an artifact descriptor.
+         *
+         * @param pomPath    a temporary descriptor path.
+         * @param artifactId an artifact identifier.
+         * @throws MojoFailureException when an error occurs while attempting to generate the descriptor.
+         */
+        protected void generateArtifactDescriptor(@Nonnull Path pomPath, @Nonnull String artifactId) throws MojoFailureException {
+                this.generateArtifactDescriptor(pomPath, artifactId, "");
+        }
+
+        /**
          * Generates an artifact descriptor.
          *
          * @param pomPath       a temporary descriptor path.
@@ -187,31 +220,6 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
                 } catch (IOException ex) {
                         throw new MojoFailureException("Could not write model: " + ex.getMessage(), ex);
                 }
-        }
-
-        /**
-         * Generates an artifact descriptor.
-         *
-         * @param pomPath    a temporary descriptor path.
-         * @param artifactId an artifact identifier.
-         * @throws MojoFailureException when an error occurs while attempting to generate the descriptor.
-         */
-        protected void generateArtifactDescriptor(@Nonnull Path pomPath, @Nonnull String artifactId) throws MojoFailureException {
-                this.generateArtifactDescriptor(pomPath, artifactId, "");
-        }
-
-        /**
-         * Installs an artifact to the local repository.
-         *
-         * @param artifactId   an artifact identifier.
-         * @param pomPath      a temporary descriptor path.
-         * @param artifactPath a temporary artifact path.
-         * @return the generated artifact.
-         *
-         * @throws MojoFailureException when an error occurs while attempting to install the artifact.
-         */
-        protected Artifact installArtifact(@Nonnull String artifactId, @Nonnull Path pomPath, @Nonnull Path artifactPath) throws MojoFailureException {
-                return this.installArtifact(artifactId, "", pomPath, artifactPath);
         }
 
         /**
@@ -256,16 +264,17 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         }
 
         /**
-         * Locates an artifact in the local repository.
+         * Installs an artifact to the local repository.
          *
-         * @param artifactId an artifact identifier.
-         * @return an artifact or, if no local version was found, an empty optional.
+         * @param artifactId   an artifact identifier.
+         * @param pomPath      a temporary descriptor path.
+         * @param artifactPath a temporary artifact path.
+         * @return the generated artifact.
          *
-         * @throws ArtifactResolutionException when the artifact resolution fails.
+         * @throws MojoFailureException when an error occurs while attempting to install the artifact.
          */
-        @Nonnull
-        protected Optional<Artifact> locateArtifact(@Nonnull String artifactId) throws ArtifactResolutionException {
-                return this.locateArtifact(artifactId, "");
+        protected Artifact installArtifact(@Nonnull String artifactId, @Nonnull Path pomPath, @Nonnull Path artifactPath) throws MojoFailureException {
+                return this.installArtifact(artifactId, "", pomPath, artifactPath);
         }
 
         /**
@@ -285,5 +294,18 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
                 } catch (ArtifactNotFoundException ex) {
                         return Optional.empty();
                 }
+        }
+
+        /**
+         * Locates an artifact in the local repository.
+         *
+         * @param artifactId an artifact identifier.
+         * @return an artifact or, if no local version was found, an empty optional.
+         *
+         * @throws ArtifactResolutionException when the artifact resolution fails.
+         */
+        @Nonnull
+        protected Optional<Artifact> locateArtifact(@Nonnull String artifactId) throws ArtifactResolutionException {
+                return this.locateArtifact(artifactId, "");
         }
 }
