@@ -17,6 +17,8 @@
 package org.basinmc.maven.plugins.minecraft;
 
 import com.google.common.io.ByteStreams;
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 import net.md_5.specialsource.Jar;
 import net.md_5.specialsource.JarMapping;
 import net.md_5.specialsource.JarRemapper;
@@ -30,6 +32,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.IOUtil;
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
 
 import javax.annotation.Nonnull;
@@ -37,6 +40,7 @@ import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -165,6 +169,7 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         Path strippedArtifact = outputDirectory.resolve("minecraft_stripped.jar");
                         Path sourceOutputDirectory = outputDirectory.resolve("sources");
                         Path sourceArtifactDescriptor = Files.createTempFile("minecraft_source", ".pom");
+                        Path sourceArtifact = Files.createTempFile("minecraft_source", "jar");
 
                         this.getLog().info("Stripping dependencies from jar");
                         try (ZipFile file = new ZipFile(mappedArtifact.toFile())) {
@@ -199,8 +204,67 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         Files.createDirectories(sourceOutputDirectory);
                         ConsoleDecompiler.main(new String[]{"-din=1", "-rbr=0", "-rsy=1", "-dgs=1", "-asc=1", "-log=ERROR", strippedArtifact.toAbsolutePath().toString(), sourceOutputDirectory.toAbsolutePath().toString()});
 
+                        this.getLog().info("Formatting source code ...");
+                        try (ZipFile file = new ZipFile(sourceOutputDirectory.resolve("minecraft_stripped.jar").toFile())) {
+                                try (FileOutputStream outputStream = new FileOutputStream(sourceArtifact.toFile())) {
+                                        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+                                                Enumeration<? extends ZipEntry> enumeration = file.entries();
+                                                Formatter formatter = new Formatter();
+
+                                                while (enumeration.hasMoreElements()) {
+                                                        ZipEntry entry = enumeration.nextElement();
+
+                                                        try (InputStream inputStream = file.getInputStream(entry)) {
+                                                                // pass on directories as is
+                                                                if (entry.isDirectory()) {
+                                                                        zipOutputStream.putNextEntry(entry);
+                                                                        continue;
+                                                                }
+
+                                                                // do not process unknown file types
+                                                                if (!entry.getName().endsWith(".java") && !entry.getName().endsWith(".xml")) {
+                                                                        zipOutputStream.putNextEntry(entry);
+                                                                        ByteStreams.copy(inputStream, zipOutputStream);
+                                                                        continue;
+                                                                }
+
+                                                                // only convert line feeds for XML files
+                                                                if (entry.getName().endsWith(".xml")) {
+                                                                        ZipEntry outputEntry = new ZipEntry(entry.getName());
+                                                                        zipOutputStream.putNextEntry(outputEntry);
+
+                                                                        try (InputStreamReader reader = new InputStreamReader(inputStream)) {
+                                                                                try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+                                                                                        String line;
+
+                                                                                        while ((line = bufferedReader.readLine()) != null) {
+                                                                                                zipOutputStream.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+                                                                                        }
+                                                                                }
+                                                                        }
+
+                                                                        continue;
+                                                                }
+
+                                                                // apply google style to java files
+                                                                ZipEntry outputEntry = new ZipEntry(entry.getName());
+                                                                zipOutputStream.putNextEntry(outputEntry);
+
+                                                                try {
+                                                                        String output = formatter.formatSource(IOUtil.toString(inputStream));
+                                                                        zipOutputStream.write(output.getBytes(StandardCharsets.UTF_8));
+                                                                } catch (FormatterException ex) {
+                                                                        this.getLog().warn("Could not format file " + entry.getName() + ": " + ex.getMessage(), ex);
+                                                                        ByteStreams.copy(inputStream, zipOutputStream);
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+
                         this.generateArtifactDescriptor(sourceArtifactDescriptor, this.module + SOURCE_SUFFIX, "-" + this.mcpVersion);
-                        this.installArtifact(this.module + SOURCE_SUFFIX, "-" + this.mcpVersion, sourceArtifactDescriptor, sourceOutputDirectory.resolve("minecraft_stripped.jar"));
+                        this.installArtifact(this.module + SOURCE_SUFFIX, "-" + this.mcpVersion, sourceArtifactDescriptor, sourceArtifact);
 
                         try {
                                 Files.deleteIfExists(strippedArtifact);
