@@ -189,6 +189,20 @@ public class DownloadMinecraftMojo extends AbstractMinecraftMojo {
 
                 try {
                         this.artifactInstaller.install(artifactPath.toFile(), artifact, this.session.getLocalRepository());
+
+                        try {
+                                Files.deleteIfExists(pomPath);
+                        } catch (IOException ex) {
+                                this.getLog().warn("Could not delete generated module descriptor: " + ex.getMessage(), ex);
+                                this.getLog().warn("You may want to delete " + pomPath.toAbsolutePath().toString() + " manually.");
+                        }
+
+                        try {
+                                Files.deleteIfExists(artifactPath);
+                        } catch (IOException ex) {
+                                this.getLog().warn("Could not delete module artifact: " + ex.getMessage(), ex);
+                                this.getLog().warn("You may want to delete " + pomPath.toAbsolutePath().toString() + " manually");
+                        }
                 } catch (ArtifactInstallationException ex) {
                         throw new MojoFailureException("Could not install artifact: " + ex.getMessage(), ex);
                 }
