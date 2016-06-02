@@ -11,6 +11,20 @@ well established build management.
 ## Usage
 
 ```xml
+<pluginRepositories>
+        <pluginRepository>
+                <id>basinmc</id>
+                <name>BasinMC Public</name>
+                <url>https://www.basinmc.org/nexus/repository/public/</url>
+
+                <snapshots>
+                        <enabled>true</enabled>
+                </snapshots>
+        </pluginRepository>
+</pluginRepositories>
+
+...
+
 <plugin>
         <groupId>org.basinmc.maven.plugins</groupId>
         <artifactId>minecraft-maven-plugin</artifactId>

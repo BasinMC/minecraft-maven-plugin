@@ -37,6 +37,18 @@
                 </repository>
         </repositories>
 
+        <pluginRepositories>
+                <pluginRepository>
+                        <id>basinmc</id>
+                        <name>BasinMC Public</name>
+                        <url>https://www.basinmc.org/nexus/repository/public/</url>
+
+                        <snapshots>
+                                <enabled>true</enabled>
+                        </snapshots>
+                </pluginRepository>
+        </pluginRepositories>
+
         <dependencies>
                 <dependency>
                         <groupId>com.mojang</groupId>
@@ -97,7 +109,7 @@
                 <defaultGoal>clean package</defaultGoal>
 
                 <plugins>
-                        <!-- Java Compiler -->
+                        <!-- Minecraft Source -->
                         <plugin>
                                 <groupId>org.basinmc.maven.plugins</groupId>
                                 <artifactId>minecraft-maven-plugin</artifactId>
