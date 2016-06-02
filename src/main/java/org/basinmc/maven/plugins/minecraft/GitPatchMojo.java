@@ -89,7 +89,7 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
                                                 // Note: This is one of the only commands which aren't supported by JGit and thus we will need to rely
                                                 // on the git executable in the user's environment
                                                 int statusCode;
-                                                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "am", "--ignore-whitespace", "--3way", p.toString()).directory(this.sourceDirectory))) != 0) {
+                                                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "am", "--ignore-whitespace", "--3way", p.toString().replace('\\', '/')).directory(this.sourceDirectory))) != 0) {
                                                         throw new MojoFailureException("Git returned an unexpected status: " + statusCode);
                                                 }
                                         } catch (MojoFailureException ex) {
