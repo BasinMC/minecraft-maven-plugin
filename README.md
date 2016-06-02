@@ -72,6 +72,12 @@ In addition all users should configure their IDEs to be able to execute
 `the org.basinmc.maven.plugins:minecraft-maven-plugin:generate-patches` goal from within their project directory in
 order to re-generate their patches from changes made and commited in the source directory.
 
+## Acknowledgements
+
+This plugin wouldn't be possible without the great people bind [MCP Bot](http://mcbot.bspk.rs/) who provide access to
+the most recent version of MCP as well as the CSRG mappings for the game. We've been searching for mappings that fit our
+needs for quite a bit and this solution is by far the most outstanding.
+
 ## Need Help?
 
 The [official documentation][wiki] has help articles and specifications on the implementation. If, however, you still
