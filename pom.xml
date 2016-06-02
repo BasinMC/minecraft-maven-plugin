@@ -73,6 +73,20 @@
                 <url>https://github.com/BasinMC/minecraft-maven-plugin/issues</url>
         </issueManagement>
 
+        <distributionManagement>
+                <repository>
+                        <id>basinmc</id>
+                        <name>BasinMC Stable</name>
+                        <url>https://www.basinmc.org/nexus/repository/maven-releases/</url>
+                </repository>
+
+                <snapshotRepository>
+                        <id>basinmc</id>
+                        <name>BasinMC Snapshot</name>
+                        <url>https://www.basinmc.org/nexus/repository/maven-snapshots/</url>
+                </snapshotRepository>
+        </distributionManagement>
+
         <!-- Dependencies -->
         <repositories>
                 <repository>
