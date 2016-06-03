@@ -137,11 +137,6 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
                                  */
                                 @Override
                                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                        if (!file.getFileName().toString().endsWith(".java") && !file.getFileName().toString().endsWith(".xml")) {
-                                                getLog().info("Skipping " + file.getFileName().toString());
-                                                return FileVisitResult.CONTINUE;
-                                        }
-
                                         file = sourceDirectory.toPath().relativize(file);
 
                                         getLog().info("Adding " + file.toString());
