@@ -109,7 +109,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
          */
         @Parameter(property = "project", required = true, readonly = true)
         protected MavenProject project;
-        @Component
+        @Parameter(defaultValue = "${session}", readonly = true)
         private MavenSession session;
         /**
          * Specifies the source output directory.
