@@ -80,7 +80,7 @@ public class GitPatchMojo extends AbstractMinecraftMojo {
 
                 try {
                         Files.walk(this.patchDirectory.toPath()).filter((p) -> p.getFileName().toString().endsWith(".patch"))
-                                .forEachOrdered((p) -> {
+                                .sorted().forEachOrdered((p) -> {
                                         try {
                                                 p = this.sourceDirectory.toPath().relativize(p);
 
