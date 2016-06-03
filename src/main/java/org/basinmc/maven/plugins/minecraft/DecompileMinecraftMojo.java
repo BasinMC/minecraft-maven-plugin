@@ -180,7 +180,7 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                                                 while (enumeration.hasMoreElements()) {
                                                         ZipEntry entry = enumeration.nextElement();
 
-                                                        if (!entry.getName().equalsIgnoreCase("log4j2.xml") && !entry.getName().equalsIgnoreCase("yggdrasil_session_pubkey.der") && !entry.getName().equalsIgnoreCase("pack.png") && !entry.getName().startsWith("net")) {
+                                                        if (!entry.getName().equalsIgnoreCase("log4j2.xml") && !entry.getName().equalsIgnoreCase("yggdrasil_session_pubkey.der") && !entry.getName().equalsIgnoreCase("pack.png") && !entry.getName().startsWith("net") && !entry.getName().startsWith("assets")) {
                                                                 continue;
                                                         }
 
