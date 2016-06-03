@@ -83,7 +83,7 @@ public class GeneratePatchesMojo extends AbstractMinecraftMojo {
                 this.getLog().info("Generating patch files ...");
 
                 int statusCode;
-                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "format-patch", "--no-stat", "-N", "-o", this.patchDirectory.toString(), "upstream").directory(this.sourceDirectory))) != 0) {
+                if ((statusCode = this.executeCommand(new ProcessBuilder().command("git", "format-patch", "--minimal", "--no-stat", "-N", "-o", this.patchDirectory.toString(), "upstream").directory(this.sourceDirectory))) != 0) {
                         throw new MojoFailureException("Git returned an unexpected status code: " + statusCode);
                 }
         }
