@@ -313,6 +313,10 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         }
 
                         this.getLog().info("Extracting sources");
+
+                        FileUtils.deleteDirectory(this.sourceDirectory);
+                        Files.createDirectories(this.sourceDirectory.toPath());
+
                         this.extract(sourceArtifactOptional.get(), this.sourceDirectory.toPath());
 
                         this.project.addCompileSourceRoot(this.sourceDirectory.toString());

@@ -114,7 +114,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         /**
          * Specifies the source output directory.
          */
-        @Parameter(defaultValue = "${project.build.directory}/generated-sources/minecraft")
+        @Parameter(defaultValue = "${project.basedir}/src/minecraft/java")
         protected File sourceDirectory;
 
         /**
