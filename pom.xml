@@ -203,12 +203,6 @@
                                                 <addMavenDescriptor>true</addMavenDescriptor>
                                                 <compress>true</compress>
                                                 <index>true</index>
-
-                                                <manifest>
-                                                        <main-class>
-                                                                org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler
-                                                        </main-class>
-                                                </manifest>
                                         </archive>
                                 </configuration>
                         </plugin>
