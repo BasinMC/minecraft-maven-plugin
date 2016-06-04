@@ -205,7 +205,7 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         ConsoleDecompiler.main(new String[]{"-din=1", "-rbr=0", "-rsy=1", "-dgs=1", "-asc=1", "-log=ERROR", strippedArtifact.toAbsolutePath().toString(), sourceOutputDirectory.toAbsolutePath().toString()});
 
                         this.getLog().info("Formatting source code ...");
-                        try (ZipFile file = new ZipFile(sourceOutputDirectory.resolve("minecraft_stripped.jar").toFile())) {
+                        try (ZipFile file = new ZipFile(sourceOutputDirectory.resolve(strippedArtifact.getFileName().toString()).toFile())) {
                                 try (FileOutputStream outputStream = new FileOutputStream(sourceArtifact.toFile())) {
                                         try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
                                                 Enumeration<? extends ZipEntry> enumeration = file.entries();
