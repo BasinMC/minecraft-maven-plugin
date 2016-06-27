@@ -34,6 +34,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.IOUtil;
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
+import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 
 import javax.annotation.Nonnull;
 import java.io.*;
@@ -44,7 +45,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -215,7 +220,20 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
 
                         this.getLog().info("Decompiling Minecraft " + this.module + " " + this.gameVersion);
                         Files.createDirectories(sourceOutputDirectory);
-                        ConsoleDecompiler.main(new String[]{"-din=1", "-rbr=0", "-rsy=1", "-dgs=1", "-asc=1", "-log=ERROR", strippedArtifact.toAbsolutePath().toString(), sourceOutputDirectory.toAbsolutePath().toString()});
+                        Map<String, Integer> ffFlags = new HashMap<>();
+                        ffFlags.put(IFernflowerPreferences.DECOMPILE_INNER, 1);
+                        ffFlags.put(IFernflowerPreferences.REMOVE_BRIDGE, 0);
+                        ffFlags.put(IFernflowerPreferences.REMOVE_SYNTHETIC, 1);
+                        ffFlags.put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES, 1);
+                        ffFlags.put(IFernflowerPreferences.ASCII_STRING_CHARACTERS, 1);
+                        List<String> args = new ArrayList<>();
+
+                        ffFlags.forEach((pref, value) -> args.add("-" + pref + "=" + String.valueOf(value)));
+                        args.add("-log=ERROR");
+                        args.add(strippedArtifact.toAbsolutePath().toString());
+                        args.add(sourceOutputDirectory.toAbsolutePath().toString());
+
+                        ConsoleDecompiler.main((String[]) args.toArray());
 
                         this.getLog().info("Formatting source code ...");
                         try (ZipFile file = new ZipFile(sourceOutputDirectory.resolve(strippedArtifact.getFileName().toString()).toFile())) {
