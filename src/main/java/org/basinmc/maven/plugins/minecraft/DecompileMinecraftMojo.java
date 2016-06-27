@@ -63,6 +63,7 @@ import java.util.zip.ZipOutputStream;
 public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
         public static final String MCP_URL_PATTERN = "http://export.mcpbot.bspk.rs/mcp_%1$s/%3$s-%2$s/mcp_%1$s-%3$s-%2$s.zip";
         public static final String SRG_URL_PATTERN = "https://bitbucket.org/ProfMobius/mcpbot/raw/default/mcp-%s-csrg.zip";
+        public static final String ALT_SRG_URL_PATTERN = "http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/%s/mcp-%s-csrg.zip";
 
         /**
          * Creates a mapped artifact.
@@ -87,11 +88,23 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         String mcpReleaseType = this.mcpVersion.substring(0, this.mcpVersion.indexOf('-'));
 
                         // download and extract all mappings
-                        this.downloadArtifact(srgArchive, String.format(SRG_URL_PATTERN, this.gameVersion));
-                        this.downloadArtifact(mcpArchive, String.format(MCP_URL_PATTERN, mcpReleaseType, this.gameVersion, mcpVersion));
+                        this.downloadArtifact(srgArchive, String.format(SRG_URL_PATTERN, this.gameVersion), String.format(ALT_SRG_URL_PATTERN, this.gameVersion, this.gameVersion));
+
+                        boolean usingLiveMCP = false;
+
+                        if (!this.downloadArtifact(mcpArchive, String.format(MCP_URL_PATTERN, mcpReleaseType, this.gameVersion, mcpVersion)) && useLiveMCP) {
+                                // Error downloading mappings, use semi-live mappings instead.
+                                usingLiveMCP = true;
+                                getLog().info("Using MCP semi-live mappings, this might break!");
+                                this.downloadArtifact(mappingsDirectory.resolve("fields.csv"), "http://export.mcpbot.bspk.rs/fields.csv");
+                                this.downloadArtifact(mappingsDirectory.resolve("methods.csv"), "http://export.mcpbot.bspk.rs/methods.csv");
+                                this.downloadArtifact(mappingsDirectory.resolve("params.csv"), "http://export.mcpbot.bspk.rs/params.csv");
+                        }
 
                         this.extract(srgArchive, mappingsDirectory);
-                        this.extract(mcpArchive, mappingsDirectory);
+                        if (!usingLiveMCP) {
+                                this.extract(mcpArchive, mappingsDirectory);
+                        }
 
                         // apply SRG and MCP mappings using SpecialSource
                         SpecialSource.kill_lvt = true;

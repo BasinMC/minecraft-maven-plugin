@@ -38,6 +38,8 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.artifact.ProjectArtifactMetadata;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -47,6 +49,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -94,6 +97,11 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         @Parameter(defaultValue = "snapshot-20160601")
         protected String mcpVersion;
         /**
+        * Determines whether to use unstable MCP csv files
+        */
+        @Parameter(defaultValue = "false")
+        protected boolean useLiveMCP;
+        /**
          * Specifies a list of modules to download decompile and remap.
          * Valid values are: client, server
          */
@@ -121,29 +129,41 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
          * Downloads the artifact in case no local cached version could be found.
          *
          * @param artifactPath a temporary artifact path.
-         * @param url          a url to download from.
+         * @param urls         an array of URLs that will be attempted in order. If one returns 200, it will be downloaded and the method will return.
          * @throws MojoFailureException when an error occurs while attempting to fetch an artifact.
+         * @return whether the artifact was successfully downloaded or not
          */
-        protected void downloadArtifact(@Nonnull Path artifactPath, @Nonnull String url) throws MojoFailureException {
-                this.getLog().info("Retrieving " + url);
+        protected boolean downloadArtifact(@Nonnull Path artifactPath, @Nonnull String... urls) throws MojoFailureException {
+                for (int attempt = 0; attempt < urls.length; attempt++) {
+                        String url = urls[attempt];
+                        this.getLog().info("Retrieving " + url);
 
-                try {
-                        HttpURLConnection connection = (HttpURLConnection) (new URL(url)).openConnection();
+                        try {
+                                HttpURLConnection connection = (HttpURLConnection) (new URL(url)).openConnection();
 
-                        if (connection.getResponseCode() != 200) {
-                                throw new IllegalStateException("Expected status code 200 but got " + connection.getResponseCode());
-                        }
-
-                        try (InputStream inputStream = connection.getInputStream()) {
-                                try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
-                                        try (FileChannel outputChannel = FileChannel.open(artifactPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-                                                outputChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+                                if (connection.getResponseCode() == 404) {
+                                        this.getLog().info("Got 404 when retrieving " + url + ", moving to next in list...");
+                                        continue;
+                                } else if (connection.getResponseCode() == 200) {
+                                        try (InputStream inputStream = connection.getInputStream()) {
+                                                try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
+                                                        try (FileChannel outputChannel = FileChannel.open(artifactPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                                                                outputChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+                                                        }
+                                                }
                                         }
+                                        return true;
+                                } else {
+                                        throw new IllegalStateException("Expected status code 200 but got " + connection.getResponseCode());
+                                }
+
+                        } catch (IllegalStateException | IOException ex) {
+                                if (attempt == urls.length - 1) {
+                                        throw new MojoFailureException("Could not read/write artifact: " + ex.getMessage(), ex);
                                 }
                         }
-                } catch (IllegalStateException | IOException ex) {
-                        throw new MojoFailureException("Could not read/write artifact: " + ex.getMessage(), ex);
                 }
+                return false;
         }
 
         /**
