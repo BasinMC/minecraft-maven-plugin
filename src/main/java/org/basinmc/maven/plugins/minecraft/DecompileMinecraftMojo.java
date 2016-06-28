@@ -233,7 +233,7 @@ public class DecompileMinecraftMojo extends AbstractMinecraftMojo {
                         args.add(strippedArtifact.toAbsolutePath().toString());
                         args.add(sourceOutputDirectory.toAbsolutePath().toString());
 
-                        ConsoleDecompiler.main((String[]) args.toArray());
+                        ConsoleDecompiler.main(args.toArray(new String[0]));
 
                         this.getLog().info("Formatting source code ...");
                         try (ZipFile file = new ZipFile(sourceOutputDirectory.resolve(strippedArtifact.getFileName().toString()).toFile())) {
