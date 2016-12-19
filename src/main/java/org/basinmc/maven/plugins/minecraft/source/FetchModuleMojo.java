@@ -22,6 +22,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Organization;
+import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -31,7 +32,9 @@ import org.basinmc.maven.plugins.minecraft.launcher.DownloadDescriptor;
 import org.basinmc.maven.plugins.minecraft.launcher.VersionIndex;
 import org.basinmc.maven.plugins.minecraft.launcher.VersionMetadata;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.NoSuchElementException;
 
 /**
@@ -108,6 +111,12 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
                     license.setUrl("https://account.mojang.com/terms");
                     license.setDistribution("manual");
                     model.addLicense(license);
+
+                    try (FileOutputStream outputStream = new FileOutputStream(m.toFile())) {
+                        try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
+                            (new MavenXpp3Writer()).write(writer, model);
+                        }
+                    }
                 }
 
                 this.installArtifact(artifact, a, m);
