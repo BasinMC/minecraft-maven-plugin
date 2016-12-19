@@ -105,10 +105,18 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
     }
 
     /**
+     * Retrieves a human readable set of artifact coordinates.
+     */
+    @Nonnull
+    protected String getArtifactCoordinateString(@Nonnull Artifact artifact) {
+        return artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() + ":" + artifact.getType() + (artifact.hasClassifier() ? ":" + artifact.getClassifier() : "");
+    }
+
+    /**
      * Installs a passed artifact into the local repository.
      */
     protected void installArtifact(@Nonnull Artifact artifact, @Nonnull Path modelPath, @Nonnull Path artifactPath) throws ArtifactInstallationException {
-        this.getLog().debug("Installing artifact " + artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion() + ":" + artifact.getType() + (artifact.getClassifier() != null ? ":" + artifact.getClassifier() : ""));
+        this.getLog().debug("Installing artifact " + this.getArtifactCoordinateString(artifact));
 
         ArtifactMetadata metadata = new ProjectArtifactMetadata(artifact, modelPath.toFile());
         artifact.addMetadata(metadata);

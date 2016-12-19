@@ -16,6 +16,7 @@
  */
 package org.basinmc.maven.plugins.minecraft.source;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.model.License;
@@ -80,13 +81,14 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
         VersionIndex index = VersionIndex.fetch();
         VersionMetadata metadata = index.getMetadata(this.getGameVersion()).orElseThrow(() -> new NoSuchElementException("No such game version: " + this.getGameVersion()));
 
+        Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER);
         DownloadDescriptor descriptor = ("server".equals(this.getModule()) ? metadata.getServerDownload() : metadata.getClientDownload());
 
         this.temporary((a) -> {
             descriptor.fetch(a);
 
             this.temporary((m) -> {
-                this.getLog().info("Storing Minecraft module as artifact with coordinates " + MINECRAFT_GROUP_ID + ":" + this.getModule() + ":" + this.getGameVersion() + ":jar:" + VANILLA_CLASSIFIER);
+                this.getLog().info("Storing Minecraft module as artifact " + this.getArtifactCoordinateString(artifact));
 
                 {
                     Model model = new Model();
@@ -108,7 +110,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
                     model.addLicense(license);
                 }
 
-                this.installArtifact(this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER), a, m);
+                this.installArtifact(artifact, a, m);
             });
         });
     }
