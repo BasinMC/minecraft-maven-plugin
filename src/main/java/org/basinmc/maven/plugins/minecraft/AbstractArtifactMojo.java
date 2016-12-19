@@ -45,6 +45,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
     protected static final String BASE_GROUP_ID = "org.basinmc";
+
     protected static final String MINECRAFT_GROUP_ID = BASE_GROUP_ID + ".minecraft";
     protected static final String VANILLA_CLASSIFIER = "vanilla";
     protected static final String MAPPED_CLASSIFIER = "mapped";
@@ -87,7 +88,7 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
     /**
      * Creates an artifact with the supplied coordinate and its type set to "jar".
      */
-    protected Artifact createArtifact(@Nonnull String groupId, @Nonnull String artifactId, @Nonnull String version, @Nonnull String classifier) {
+    protected Artifact createArtifactWithClassifier(@Nonnull String groupId, @Nonnull String artifactId, @Nonnull String version, @Nonnull String classifier) {
         return this.createArtifact(groupId, artifactId, version, "jar", classifier);
     }
 

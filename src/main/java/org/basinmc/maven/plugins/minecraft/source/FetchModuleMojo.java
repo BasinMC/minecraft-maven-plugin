@@ -58,7 +58,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
         this.getLog().info("Fetching Minecraft module (" + this.getModule() + " artifact of version " + this.getGameVersion() + ")");
 
         try {
-            if (!this.findArtifact(this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER)).isPresent()) {
+            if (!this.findArtifact(this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER)).isPresent()) {
                 this.fetchArtifact();
             } else {
                 this.getLog().info("Skipping download of Minecraft module - Located cached artifact");
@@ -81,7 +81,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
         VersionIndex index = VersionIndex.fetch();
         VersionMetadata metadata = index.getMetadata(this.getGameVersion()).orElseThrow(() -> new NoSuchElementException("No such game version: " + this.getGameVersion()));
 
-        Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER);
+        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER);
         DownloadDescriptor descriptor = ("server".equals(this.getModule()) ? metadata.getServerDownload() : metadata.getClientDownload());
 
         this.temporary((a) -> {
