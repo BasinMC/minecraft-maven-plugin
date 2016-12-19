@@ -86,6 +86,14 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
     }
 
     /**
+     * Creates an artifact with the supplied coordinates.
+     */
+    @Nonnull
+    protected Artifact createArtifact(@Nonnull String groupId, @Nonnull String artifactId, @Nonnull String version, @Nonnull String type) {
+        return this.getArtifactFactory().createBuildArtifact(groupId, artifactId, version, type);
+    }
+
+    /**
      * Creates an artifact with the supplied coordinate and its type set to "jar".
      */
     protected Artifact createArtifactWithClassifier(@Nonnull String groupId, @Nonnull String artifactId, @Nonnull String version, @Nonnull String classifier) {
