@@ -18,8 +18,10 @@ package org.basinmc.maven.plugins.minecraft;
 
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,11 +53,11 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     @Parameter(required = true)
     private String module;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/patch", required = true)
-    private String patchDirectory;
+    private File patchDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/java", required = true)
-    private String sourceDirectory;
+    private File sourceDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/resource", required = true)
-    private String resourceDirectory;
+    private File resourceDirectory;
     // </editor-fold>
 
     // <editor-fold desc="Component Getters">
@@ -82,17 +84,17 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     }
 
     @Nonnull
-    public String getPatchDirectory() {
+    public File getPatchDirectory() {
         return this.patchDirectory;
     }
 
     @Nonnull
-    public String getSourceDirectory() {
+    public File getSourceDirectory() {
         return this.sourceDirectory;
     }
 
     @Nonnull
-    public String getResourceDirectory() {
+    public File getResourceDirectory() {
         return this.resourceDirectory;
     }
     // </editor-fold>
@@ -108,6 +110,57 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
             consumer.accept(tmp);
         } finally {
             Files.delete(tmp);
+        }
+    }
+
+    /**
+     * Verifies whether the specified set of configuration properties is within their expected
+     * bounds.
+     */
+    protected void verifyProperties(@Nonnull String... propertyNames) throws MojoExecutionException {
+        for (String propertyName : propertyNames) {
+            switch (propertyName) {
+                case "module":
+                    if (!"server".equals(this.getModule()) && !"client".equals(this.getModule())) {
+                        throw new MojoExecutionException("Invalid module \"" + this.getModule() + "\" expected server or client");
+                    }
+                    break;
+                case "patchDirectory":
+                    this.verifyDirectory(this.patchDirectory.toPath());
+                    break;
+                case "sourceDirectory":
+                    this.verifyDirectory(this.sourceDirectory.toPath());
+                    break;
+                case "resourceDirectory":
+                    this.verifyDirectory(this.resourceDirectory.toPath());
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Verifies whether a specified directory conforms to the correct bounds and makes sure it
+     * exists.
+     */
+    private void verifyDirectory(@Nonnull Path directory) throws MojoExecutionException {
+        if (Files.isRegularFile(directory)) {
+            throw new MojoExecutionException("Directory \"" + directory.toAbsolutePath() + "\" is occupied by a file");
+        }
+
+        if (Files.notExists(directory)) {
+            try {
+                Files.createDirectories(directory);
+            } catch (IOException ex) {
+                throw new MojoExecutionException("Cannot create directory \"" + directory.toAbsolutePath() + "\": " + ex.getMessage(), ex);
+            }
+        } else {
+            if (!Files.isReadable(directory)) {
+                throw new MojoExecutionException("Directory \"" + directory.toAbsolutePath() + "\" is not readable");
+            }
+
+            if (!Files.isWritable(directory)) {
+                throw new MojoExecutionException("Directory \"" + directory.toAbsolutePath() + "\" is not writable");
+            }
         }
     }
 

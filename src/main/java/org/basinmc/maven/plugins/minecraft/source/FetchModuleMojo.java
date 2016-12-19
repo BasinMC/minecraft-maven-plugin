@@ -52,7 +52,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.verifyProperties();
+        this.verifyProperties("module");
 
         this.getLog().info("Fetching Minecraft module (" + this.getModule() + " artifact of version " + this.getGameVersion() + ")");
 
@@ -111,16 +111,5 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
                 this.installArtifact(this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER), a, m);
             });
         });
-    }
-
-    /**
-     * Verifies whether the passed properties are within their respective bounds.
-     *
-     * @throws MojoExecutionException when one or more properties are out of bounds.
-     */
-    private void verifyProperties() throws MojoExecutionException {
-        if (!"server".equals(this.getModule()) && !"client".equals(this.getModule())) {
-            throw new MojoExecutionException("Invalid module \"" + this.getModule() + "\" expected server or client");
-        }
     }
 }
