@@ -1,0 +1,126 @@
+/*
+ * Copyright 2016 Johannes Donath <johannesd@torchmind.com>
+ * and other copyright owners as documented in the project's IP log.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.basinmc.maven.plugins.minecraft.source;
+
+import org.apache.maven.artifact.installer.ArtifactInstallationException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
+import org.apache.maven.model.License;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.Organization;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.basinmc.maven.plugins.minecraft.AbstractArtifactMojo;
+import org.basinmc.maven.plugins.minecraft.launcher.DownloadDescriptor;
+import org.basinmc.maven.plugins.minecraft.launcher.VersionIndex;
+import org.basinmc.maven.plugins.minecraft.launcher.VersionMetadata;
+
+import java.io.IOException;
+import java.util.NoSuchElementException;
+
+/**
+ * Fetches a Minecraft module from the remote servers unless a local version is already present
+ * within the local maven repository.
+ *
+ * @author <a href="mailto:johannesd@torchmind.com">Johannes Donath</a>
+ */
+@Mojo(
+        name = "fetch",
+        requiresProject = false,
+        threadSafe = true,
+        defaultPhase = LifecyclePhase.INITIALIZE
+)
+public class FetchModuleMojo extends AbstractArtifactMojo {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        this.verifyProperties();
+
+        this.getLog().info("Fetching Minecraft module (" + this.getModule() + " artifact of version " + this.getGameVersion() + ")");
+
+        try {
+            if (!this.findArtifact(this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER)).isPresent()) {
+                this.fetchArtifact();
+            } else {
+                this.getLog().info("Skipping download of Minecraft module - Located cached artifact");
+            }
+        } catch (ArtifactResolutionException ex) {
+            throw new MojoFailureException("Failed to resolve Minecraft module artifact: " + ex.getMessage(), ex);
+        } catch (ArtifactInstallationException ex) {
+            throw new MojoFailureException("Failed to install Minecraft module artifact: " + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new MojoFailureException("Failed to read/write temporary file or access remote server: " + ex.getMessage(), ex);
+        } catch (Exception ex) {
+            throw new MojoFailureException("Failed to execute task: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Fetches and installs the Minecraft module artifact.
+     */
+    private void fetchArtifact() throws Exception {
+        VersionIndex index = VersionIndex.fetch();
+        VersionMetadata metadata = index.getMetadata(this.getGameVersion()).orElseThrow(() -> new NoSuchElementException("No such game version: " + this.getGameVersion()));
+
+        DownloadDescriptor descriptor = ("server".equals(this.getModule()) ? metadata.getServerDownload() : metadata.getClientDownload());
+
+        this.temporary((a) -> {
+            descriptor.fetch(a);
+
+            this.temporary((m) -> {
+                this.getLog().info("Storing Minecraft module as artifact with coordinates " + MINECRAFT_GROUP_ID + ":" + this.getModule() + ":" + this.getGameVersion() + ":jar:" + VANILLA_CLASSIFIER);
+
+                {
+                    Model model = new Model();
+
+                    model.setGroupId(MINECRAFT_GROUP_ID);
+                    model.setArtifactId(this.getModule());
+                    model.setVersion(this.getGameVersion());
+                    model.setPackaging("jar");
+
+                    Organization organization = new Organization();
+                    organization.setName("Mojang");
+                    organization.setUrl("http://mojang.com");
+                    model.setOrganization(organization);
+
+                    License license = new License();
+                    license.setName("Mojang EULA");
+                    license.setUrl("https://account.mojang.com/terms");
+                    license.setDistribution("manual");
+                    model.addLicense(license);
+                }
+
+                this.installArtifact(this.createArtifact(MINECRAFT_GROUP_ID, this.getModule(), this.getGameVersion(), VANILLA_CLASSIFIER), a, m);
+            });
+        });
+    }
+
+    /**
+     * Verifies whether the passed properties are within their respective bounds.
+     *
+     * @throws MojoExecutionException when one or more properties are out of bounds.
+     */
+    private void verifyProperties() throws MojoExecutionException {
+        if (!"server".equals(this.getModule()) && !"client".equals(this.getModule())) {
+            throw new MojoExecutionException("Invalid module \"" + this.getModule() + "\" expected server or client");
+        }
+    }
+}
