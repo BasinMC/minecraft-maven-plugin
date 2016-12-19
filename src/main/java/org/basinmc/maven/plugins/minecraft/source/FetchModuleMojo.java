@@ -52,7 +52,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
      */
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        this.verifyProperties("module");
+        this.verifyProperties("module", "gameVersion");
 
         this.getLog().info("Fetching Minecraft module (" + this.getModule() + " artifact of version " + this.getGameVersion() + ")");
 
