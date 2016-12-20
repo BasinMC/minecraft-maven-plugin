@@ -34,18 +34,22 @@ import org.apache.maven.project.artifact.ProjectArtifactMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
+import javax.annotation.WillNotClose;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -138,6 +142,20 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
      * Fetches any resources from a remote HTTP server and stores it in a specified file.
      */
     protected void fetch(@Nonnull URI uri, @Nonnull Path target) throws IOException {
+        this.fetch(uri, FileChannel.open(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE));
+    }
+
+    /**
+     * Fetches any resource from a remote HTTP server and writes it to a supplied output stream.
+     */
+    protected void fetch(@Nonnull URI uri, @Nonnull @WillNotClose OutputStream outputStream) throws IOException {
+        this.fetch(uri, Channels.newChannel(outputStream));
+    }
+
+    /**
+     * Fetches any resource from a remote HTTP server and writes it to a supplied channel.
+     */
+    protected void fetch(@Nonnull URI uri, @Nonnull @WillNotClose WritableByteChannel outputChannel) throws IOException {
         HttpClient client = HttpClients.createMinimal();
 
         HttpGet request = new HttpGet(uri);
@@ -151,8 +169,14 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
 
         try (InputStream inputStream = response.getEntity().getContent()) {
             try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
-                try (FileChannel fileChannel = FileChannel.open(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-                    fileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+                ByteBuffer buf = ByteBuffer.allocateDirect(128);
+
+                while (inputChannel.read(buf) != 0) {
+                    buf.flip();
+                    {
+                        outputChannel.write(buf);
+                    }
+                    buf.reset();
                 }
             }
         }
