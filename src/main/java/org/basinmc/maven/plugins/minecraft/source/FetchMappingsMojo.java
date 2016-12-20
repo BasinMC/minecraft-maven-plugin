@@ -62,8 +62,6 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
     private static final String MCP_LIVE_URL = "http://export.mcpbot.bspk.rs/%s.csv";
     private static final String SRG_URL = "http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/%1$s/mcp-%1$s-csrg.zip";
 
-    private static final Duration LIVE_CACHING_DURATION = Duration.ofHours(12);
-
     /**
      * {@inheritDoc}
      */
@@ -88,13 +86,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                 this.getLog().info("Fetching MCP mappings v" + this.getMappingVersion());
 
                 try {
-                    if (!this.findArtifact(artifact).filter((p) -> {
-                        try {
-                            return !artifact.isSnapshot() || Files.getLastModifiedTime(p).toInstant().isAfter(Instant.now().minus(LIVE_CACHING_DURATION));
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    }).isPresent()) {
+                    if (!this.findArtifact(artifact).filter((p) -> this.isSnapshotArtifactValid(artifact, p)).isPresent()) {
                         this.populateMcpMappingsArtifact();
                     } else {
                         this.getLog().info("Skipping MCP mappings - Cached");

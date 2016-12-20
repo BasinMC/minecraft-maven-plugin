@@ -43,12 +43,16 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.WillNotClose;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -71,6 +75,8 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
     protected static final String VANILLA_CLASSIFIER = "vanilla";
     protected static final String MAPPED_CLASSIFIER = "mapped";
     protected static final String SOURCE_CLASSIFIER = "source";
+
+    private static final Duration SNAPSHOT_CACHING_DURATION = Duration.ofHours(12);
 
     // <editor-fold desc="Maven Components">
     @Component
@@ -214,5 +220,17 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
         artifact.addMetadata(metadata);
 
         this.getArtifactInstaller().install(artifactPath.toFile(), artifact, this.getSession().getLocalRepository());
+    }
+
+    /**
+     * Checks whether a snapshot artifact is considered valid.
+     */
+    protected boolean isSnapshotArtifactValid(@Nonnull Artifact artifact, @Nullable Path path) {
+        try {
+            return !artifact.isSnapshot() || (path != null && Files.getLastModifiedTime(path).toInstant().isAfter(Instant.now().minus(SNAPSHOT_CACHING_DURATION)));
+        } catch (IOException ex) {
+            this.getLog().warn("Could not verify state of snapshot artifact " + this.getArtifactCoordinateString(artifact) + ": " + ex.getMessage());
+            return false;
+        }
     }
 }
