@@ -104,7 +104,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
      * finish execution.
      */
     protected <E extends Exception> void temporary(@Nonnull PathConsumer<E> consumer) throws E, IOException {
-        Path tmp = Files.createTempFile("mvn_mc", "mc");
+        Path tmp = Files.createTempFile("mvn_mc", "tmp");
 
         try {
             consumer.accept(tmp);
