@@ -16,6 +16,8 @@
  */
 package org.basinmc.maven.plugins.minecraft;
 
+import com.google.common.io.ByteStreams;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
@@ -176,15 +178,7 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
 
         try (InputStream inputStream = response.getEntity().getContent()) {
             try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
-                ByteBuffer buf = ByteBuffer.allocateDirect(128);
-
-                while (inputChannel.read(buf) != 0) {
-                    buf.flip();
-                    {
-                        outputChannel.write(buf);
-                    }
-                    buf.reset();
-                }
+                ByteStreams.copy(inputChannel, outputChannel);
             }
         }
     }
