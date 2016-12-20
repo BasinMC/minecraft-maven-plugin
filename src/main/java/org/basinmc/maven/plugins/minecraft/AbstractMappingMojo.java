@@ -17,7 +17,6 @@
 package org.basinmc.maven.plugins.minecraft;
 
 import org.apache.maven.artifact.Artifact;
-import org.basinmc.maven.plugins.minecraft.AbstractArtifactMojo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
