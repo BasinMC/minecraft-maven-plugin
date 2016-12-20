@@ -44,7 +44,7 @@ import java.util.NoSuchElementException;
  * @author <a href="mailto:johannesd@torchmind.com">Johannes Donath</a>
  */
 @Mojo(
-        name = "fetch",
+        name = "fetch-module",
         requiresProject = false,
         threadSafe = true,
         defaultPhase = LifecyclePhase.INITIALIZE
