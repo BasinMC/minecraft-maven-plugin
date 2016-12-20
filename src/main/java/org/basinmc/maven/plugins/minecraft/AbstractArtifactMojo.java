@@ -62,6 +62,7 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
 
     protected static final String MINECRAFT_GROUP_ID = BASE_GROUP_ID + ".minecraft";
     protected static final String SRG_ARTIFACT_ID = "mappings-srg";
+    protected static final String MCP_ARTIFACT_ID = "mappings-mcp";
     protected static final String VANILLA_CLASSIFIER = "vanilla";
     protected static final String MAPPED_CLASSIFIER = "mapped";
     protected static final String SOURCE_CLASSIFIER = "source";
