@@ -16,6 +16,11 @@
  */
 package org.basinmc.maven.plugins.minecraft;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
@@ -27,7 +32,16 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.project.artifact.ProjectArtifactMetadata;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -99,6 +113,48 @@ public abstract class AbstractArtifactMojo extends AbstractMinecraftMojo {
      */
     protected Artifact createArtifactWithClassifier(@Nonnull String groupId, @Nonnull String artifactId, @Nonnull String version, @Nonnull String classifier) {
         return this.createArtifact(groupId, artifactId, version, "jar", classifier);
+    }
+
+    /**
+     * Fetches any resource from a remote HTTP server and stores it in a specified file.
+     */
+    protected void fetch(@Nonnull String url, @Nonnull Path target) throws IOException {
+        this.fetch(new URL(url), target);
+    }
+
+    /**
+     * Fetches any resource from a remote HTTP server and stores it in a specified file.
+     */
+    protected void fetch(@Nonnull URL url, @Nonnull Path target) throws IOException {
+        try {
+            this.fetch(url.toURI(), target);
+        } catch (URISyntaxException ex) {
+            throw new IOException("Invalid resource URI: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Fetches any resources from a remote HTTP server and stores it in a specified file.
+     */
+    protected void fetch(@Nonnull URI uri, @Nonnull Path target) throws IOException {
+        HttpClient client = HttpClients.createMinimal();
+
+        HttpGet request = new HttpGet(uri);
+        HttpResponse response = client.execute(request);
+
+        StatusLine line = response.getStatusLine();
+
+        if (line.getStatusCode() != 200) {
+            throw new IOException("Unexpected status code: " + line.getStatusCode() + " - " + line.getReasonPhrase());
+        }
+
+        try (InputStream inputStream = response.getEntity().getContent()) {
+            try (ReadableByteChannel inputChannel = Channels.newChannel(inputStream)) {
+                try (FileChannel fileChannel = FileChannel.open(target, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                    fileChannel.transferFrom(inputChannel, 0, Long.MAX_VALUE);
+                }
+            }
+        }
     }
 
     /**
