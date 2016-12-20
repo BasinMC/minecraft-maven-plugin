@@ -133,16 +133,13 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
 
                     // TODO: Add support for MCP parameter mappings
 
-                    {
-                        ZipFile file = new ZipFile(srgMappingsArtifact.toFile());
+                    try (ZipFile file = new ZipFile(srgMappingsArtifact.toFile())) {
                         ZipEntry entry = file.getEntry("joined.csrg");
 
                         this.extractEntry(file, entry, srgPath);
                     }
 
-                    {
-                        ZipFile file = new ZipFile(mcpMappingsArtifact.toFile());
-
+                    try (ZipFile file = new ZipFile(mcpMappingsArtifact.toFile())){
                         {
                             ZipEntry entry = file.getEntry("fields.csv");
                             this.extractEntry(file, entry, mcpFieldsPath);
