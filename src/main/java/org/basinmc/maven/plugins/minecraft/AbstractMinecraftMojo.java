@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -113,6 +114,32 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         }
     }
 
+    protected <E extends Exception> void temporary(@Nonnegative int amount, @Nonnull MultiPathConsumer<E> consumer) throws E, IOException {
+        Path tmp[] = new Path[amount];
+
+        for (int i = 0; i < tmp.length; ++i) {
+            tmp[i] = Files.createTempFile("mvn_mc", "tmp");
+        }
+
+        try {
+            consumer.accept(tmp);
+        } finally {
+            IOException exception = null;
+
+            for (Path path : tmp) {
+                try {
+                    Files.delete(path);
+                } catch (IOException ex) {
+                    exception = ex;
+                }
+            }
+
+            if (exception != null) {
+                throw new IOException("One or more temporary files could not be deleted: " + exception.getMessage(), exception);
+            }
+        }
+    }
+
     /**
      * Verifies whether the specified set of configuration properties is within their expected
      * bounds.
@@ -172,5 +199,16 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     @FunctionalInterface
     public interface PathConsumer<E extends Exception> {
         void accept(@Nonnull Path p) throws E;
+    }
+
+    /**
+     * Provides a simple consumer which is capable of throwing any kind of exception and accepting
+     * multiple values.
+     *
+     * @param <E> an exception type.
+     */
+    @FunctionalInterface
+    public interface MultiPathConsumer<E extends Exception> {
+        void accept(@Nonnull Path... p) throws E;
     }
 }
