@@ -62,10 +62,14 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
             // Note: We are ignoring errors reported by git here since newer versions of git seem to
             // consider invoking git am --abort on an repository outside of an archive merging state
             // to be an error
-            if (this.execute(new ProcessBuilder("git", "am", "--abort")) != 0) {
+            if (this.execute(new ProcessBuilder("git", "am", "--abort").directory(this.getSourceDirectory())) != 0) {
                 this.getLog().info("No previous merge operation in process - Resuming operation");
             } else {
                 this.getLog().warn("Aborted previous merge operation");
+            }
+
+            if (this.execute(new ProcessBuilder("git", "reset", "--hard", "upstream").directory(this.getSourceDirectory())) != 0) {
+                throw new MojoFailureException("Git returned with unexpected status code");
             }
         } catch (InterruptedException ex) {
             throw new MojoFailureException("Interrupted while awaiting git return status: " + ex.getMessage(), ex);

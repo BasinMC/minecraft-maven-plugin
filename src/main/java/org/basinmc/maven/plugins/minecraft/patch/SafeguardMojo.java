@@ -89,6 +89,9 @@ public class SafeguardMojo extends AbstractMinecraftMojo {
 
                 throw new MojoFailureException("Repository is in a dirty state");
             }
+
+            // TODO: Compare number of commits since first commit against amount of patches to
+            // prevent accidental loss of changes due to the pending git reset operation
         } catch (GitAPIException ex) {
             throw new MojoFailureException("Failed to execute git command: " + ex.getMessage(), ex);
         } catch (IOException ex) {
