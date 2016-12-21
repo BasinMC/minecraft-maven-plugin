@@ -102,10 +102,10 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                                     }
 
                                     this.getLog().info("Merge mode activated");
-                                    this.getLog().info("Perform a manual merge for the modified files");
+                                    this.getLog().info("Perform a manual merge for the modified files and confirm by entering \"Y\"");
 
                                     while (true) {
-                                        System.out.println("Continue? [Y/N]");
+                                        this.getLog().info("Continue process? [Y/N]");
                                         int input = System.in.read();
 
                                         if (input == 'N' || input == 'n') {
