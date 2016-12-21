@@ -113,7 +113,7 @@ public class VersionIndex {
         }
 
         try (InputStream inputStream = response.getEntity().getContent()) {
-            return READER.readValue(inputStream);
+            return READER.forType(VersionIndex.class).readValue(inputStream);
         }
     }
 
@@ -135,7 +135,7 @@ public class VersionIndex {
             }
 
             try (InputStream inputStream = response.getEntity().getContent()) {
-                return READER.readValue(inputStream);
+                return READER.forType(VersionMetadata.class).readValue(inputStream);
             }
         } catch (IOException ex) {
             throw new WrapperException(ex);
