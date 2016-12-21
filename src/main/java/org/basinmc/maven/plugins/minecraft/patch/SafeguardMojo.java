@@ -72,7 +72,7 @@ public class SafeguardMojo extends AbstractMinecraftMojo {
 
         try {
             Repository repository = new FileRepositoryBuilder()
-                    .setGitDir(this.getSourceDirectory())
+                    .setWorkTree(this.getSourceDirectory())
                     .build();
 
             if (!repository.getObjectDatabase().exists()) {
