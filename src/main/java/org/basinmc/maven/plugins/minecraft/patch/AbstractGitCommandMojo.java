@@ -16,6 +16,8 @@
  */
 package org.basinmc.maven.plugins.minecraft.patch;
 
+import com.google.common.base.Splitter;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.basinmc.maven.plugins.minecraft.AbstractMinecraftMojo;
@@ -51,7 +53,10 @@ public abstract class AbstractGitCommandMojo extends AbstractMinecraftMojo {
 
         if (process.waitFor() != 0) {
             try (InputStream errorStream = process.getErrorStream()) {
-                this.getLog().error(IOUtil.toString(errorStream));
+                Splitter.onPattern("\r?\n")
+                        .omitEmptyStrings()
+                        .split(IOUtil.toString(errorStream))
+                        .forEach(this.getLog()::error);
             }
         }
 
