@@ -162,13 +162,11 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
                                     JavaClassSource classSource = Roaster.parse(JavaClassSource.class, inputStream);
                                     this.applyAccessTransformation(transformationMap, classSource);
                                     outputChannel.write(ByteBuffer.wrap(classSource.toString().getBytes(StandardCharsets.UTF_8)));
-
-                                    continue;
                                 }
-                            }
-
-                            try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
-                                ByteStreams.copy(channel, outputChannel);
+                            } else {
+                                try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
+                                    ByteStreams.copy(channel, outputChannel);
+                                }
                             }
                         }
                     }
