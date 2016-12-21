@@ -57,10 +57,16 @@ public class SafeguardMojo extends AbstractMinecraftMojo {
         this.getLog().info("Running repository safeguard checks");
 
         if (this.isForced()) {
-            this.getLog().warn("Skipping safeguard - Override is enabled");
-            this.getLog().warn("----------------------------------------");
-            this.getLog().warn("SAFEGUARD OVERRIDE ACTIVE");
-            this.getLog().warn("THIS MAY CAUSE LOSS OF CHANGES - USE AT YOUR OWN RISK");
+            this.getLog().warn(
+                    "Skipping safeguard - Override is enabled\n" +
+                            "\n" +
+                            "+--------------------------------------+\n" +
+                            "|                                      |\n" +
+                            "|    THIS MAY CAUSE LOSS OF CHANGES    |\n" +
+                            "|         USE AT YOUR OWN RISK         |\n" +
+                            "|                                      |\n" +
+                            "+--------------------------------------+\n"
+            );
             return;
         }
 
