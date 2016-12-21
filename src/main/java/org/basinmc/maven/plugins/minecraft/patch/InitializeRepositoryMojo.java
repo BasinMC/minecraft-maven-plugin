@@ -87,6 +87,7 @@ public class InitializeRepositoryMojo extends AbstractArtifactMojo {
         }
 
         try {
+            Files.createDirectories(this.getSourceDirectory().toPath());
             Git git = Git.init().setDirectory(this.getSourceDirectory()).call();
 
             try (ZipFile file = new ZipFile(sourceArtifact.toFile())) {
