@@ -1,4 +1,4 @@
-# Minecraft Maven Plugin ![State](https://img.shields.io/badge/state-prototype-orange.svg) [![Latest Tag](https://img.shields.io/github/release/basinmc/minecraft-maven-plugin.svg)](https://github.com/BasinMC/minecraft-maven-plugin/releases)
+# Minecraft Maven Plugin ![State](https://img.shields.io/badge/state-stable-green.svg) [![Latest Tag](https://img.shields.io/github/release/basinmc/minecraft-maven-plugin.svg)](https://github.com/BasinMC/minecraft-maven-plugin/releases)
 
 The Minecraft maven plugin allows its users to easily apply patches to the Minecraft server or
 client using maven's well established build management.
