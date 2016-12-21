@@ -119,6 +119,8 @@ public class InitializeRepositoryMojo extends AbstractArtifactMojo {
                     .setCommitter(ROOT_COMMIT_AUTHOR_NAME, ROOT_COMMIT_AUTHOR_EMAIL)
                     .setMessage("Added decompiled sources.")
                     .call();
+
+            this.getProject().addCompileSourceRoot(this.getSourceDirectory().toString());
         } catch (GitAPIException ex) {
             throw new MojoFailureException("Failed to execute Git command: " + ex.getMessage(), ex);
         } catch (IOException ex) {
