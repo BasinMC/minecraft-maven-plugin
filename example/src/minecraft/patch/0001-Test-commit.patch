@@ -1,21 +1,21 @@
-From 727e42670316310fd181f5a041e3e8aaa987b82e Mon Sep 17 00:00:00 2001
+From bfeea7ddbeae253ae0461f73da6dfd8903f4c5fa Mon Sep 17 00:00:00 2001
 From: Johannes Donath <johannesd@torchmind.com>
-Date: Wed, 21 Dec 2016 20:36:08 +0100
+Date: Wed, 21 Dec 2016 20:50:10 +0100
 Subject: [PATCH] Test Commit
 
 
 diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
-index 9360057..13a6eef 100644
+index aa45aa0..60a4332 100644
 --- a/net/minecraft/server/MinecraftServer.java
 +++ b/net/minecraft/server/MinecraftServer.java
-@@ -751,6 +751,7 @@ public abstract class MinecraftServer
+@@ -629,6 +629,7 @@ public abstract class MinecraftServer
+   }
  
-    static protected void main(String[] var0)
-    {
-+      // Test
-       Bootstrap.register();
+   static protected void main(String[] var0) {
++    // Test
+     Bootstrap.register();
  
-       try
+     try {
 -- 
 2.11.0.windows.1
 
