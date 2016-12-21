@@ -103,7 +103,10 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
                     }
 
                     Path outputPath = this.getSourceDirectory().toPath().resolve(name);
-                    Files.createDirectories(outputPath.getParent());
+
+                    if (!Files.isDirectory(outputPath.getParent())) {
+                        Files.createDirectories(outputPath.getParent());
+                    }
 
                     try (InputStream inputStream = file.getInputStream(entry)) {
                         try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {

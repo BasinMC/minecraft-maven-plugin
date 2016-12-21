@@ -80,7 +80,10 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                     }
 
                     Path outputPath = this.getResourceDirectory().toPath().resolve(name);
-                    Files.createDirectories(outputPath.getParent());
+
+                    if (!Files.isDirectory(outputPath.getParent())) {
+                        Files.createDirectories(outputPath.getParent());
+                    }
 
                     if (Files.exists(outputPath)) {
                         if (!entry.getLastModifiedTime().toInstant().isAfter(Files.getLastModifiedTime(outputPath).toInstant())) {
