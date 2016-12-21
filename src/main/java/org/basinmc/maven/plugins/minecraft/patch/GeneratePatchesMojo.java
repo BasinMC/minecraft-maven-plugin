@@ -74,7 +74,7 @@ public class GeneratePatchesMojo extends AbstractGitCommandMojo {
 
         try {
             Repository repository = new FileRepositoryBuilder()
-                    .setGitDir(this.getSourceDirectory())
+                    .setWorkTree(this.getSourceDirectory())
                     .setMustExist(true)
                     .build();
 
@@ -90,7 +90,7 @@ public class GeneratePatchesMojo extends AbstractGitCommandMojo {
             throw new MojoFailureException("Could not access module repository: " + ex.getMessage(), ex);
         }
 
-        Path workingDirectory = Paths.get(".");
+        Path workingDirectory = this.getSourceDirectory().toPath().toAbsolutePath();
         Path relativePatchDirectory = workingDirectory.relativize(this.getPatchDirectory().toPath());
 
         try {
