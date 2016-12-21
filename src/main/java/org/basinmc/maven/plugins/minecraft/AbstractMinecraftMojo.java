@@ -21,6 +21,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.settings.Settings;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +48,8 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     protected MavenProject project;
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession session;
+    @Parameter(defaultValue = "${settings}", readonly = true)
+    private Settings settings;
     // </editor-fold>
 
     // <editor-fold desc="Configuration Properties">
@@ -75,6 +78,11 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     @Nonnull
     protected MavenSession getSession() {
         return this.session;
+    }
+
+    @Nonnull
+    protected Settings getSettings() {
+        return this.settings;
     }
     // </editor-fold>
 
