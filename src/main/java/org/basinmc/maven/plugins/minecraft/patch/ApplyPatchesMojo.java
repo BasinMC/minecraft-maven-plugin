@@ -79,7 +79,8 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
             try {
                 Files.walk(this.getPatchDirectory().toPath())
                         .filter((p) -> p.getFileName().endsWith(".patch"))
-                        .forEach((p) -> {
+                        .sorted()
+                        .forEachOrdered((p) -> {
                             this.getLog().info("Applying " + p.toString());
                             List<String> command = new ArrayList<>(Arrays.asList("git", "am", "--ignore-whitespace", "--3way", workingPath.relativize(p.toAbsolutePath()).toString()));
 
