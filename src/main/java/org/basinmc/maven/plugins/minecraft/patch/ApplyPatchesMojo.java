@@ -59,12 +59,13 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
         // abort any pending merges before attempting anything else and reset the repository back
         // to its original state
         try {
+            // Note: We are ignoring errors reported by git here since newer versions of git seem to
+            // consider invoking git am --abort on an repository outside of an archive merging state
+            // to be an error
             if (this.execute(new ProcessBuilder("git", "am", "--abort")) != 0) {
-                throw new MojoFailureException("Git terminated with an unexpected error");
-            }
-
-            if (this.execute(new ProcessBuilder("git", "reset", "--hard", "upstream")) != 0) {
-                throw new MojoFailureException("Git terminated with an unexpected error");
+                this.getLog().info("No previous merge operation in process - Resuming operation");
+            } else {
+                this.getLog().warn("Aborted previous merge operation");
             }
         } catch (InterruptedException ex) {
             throw new MojoFailureException("Interrupted while awaiting git return status: " + ex.getMessage(), ex);
