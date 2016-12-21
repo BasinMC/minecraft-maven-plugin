@@ -64,7 +64,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     private File patchDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/java", required = true)
     private File sourceDirectory;
-    @Parameter(defaultValue = "${project.basedir}/src/minecraft/resource", required = true)
+    @Parameter(defaultValue = "${project.basedir}/target/generated-sources/minecraft", required = true)
     private File resourceDirectory;
     @Parameter
     private File accessTransformation;
