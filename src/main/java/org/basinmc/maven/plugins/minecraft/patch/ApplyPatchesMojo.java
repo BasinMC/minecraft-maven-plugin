@@ -78,24 +78,22 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
             this.getLog().info("Note: If you are running this build on a CI server, you should disable interactive mode in your maven configuration (or switch to batch mode using the corresponding command line argument)");
         }
 
-        Path workingPath = Paths.get(".").toAbsolutePath();
-
         // apply patches one-by-one
         try {
             try {
                 Files.walk(this.getPatchDirectory().toPath())
-                        .filter((p) -> p.getFileName().endsWith(".patch"))
+                        .filter((p) -> p.getFileName().toString().endsWith(".patch"))
                         .sorted()
                         .forEachOrdered((p) -> {
                             this.getLog().info("Applying " + p.toString());
-                            List<String> command = new ArrayList<>(Arrays.asList("git", "am", "--ignore-whitespace", "--3way", workingPath.relativize(p.toAbsolutePath()).toString()));
+                            List<String> command = new ArrayList<>(Arrays.asList("git", "am", "--ignore-whitespace", "--3way", this.getSourceDirectory().toPath().relativize(p.toAbsolutePath()).toString()));
 
                             if (this.getSettings().isInteractiveMode()) {
                                 command.add("--reject");
                             }
 
                             try {
-                                if (this.execute(new ProcessBuilder(command)) != 0) {
+                                if (this.execute(new ProcessBuilder(command).directory(this.getSourceDirectory())) != 0) {
                                     this.getLog().error("Could not apply patch from file " + p.toString());
 
                                     if (!this.getSettings().isInteractiveMode()) {
