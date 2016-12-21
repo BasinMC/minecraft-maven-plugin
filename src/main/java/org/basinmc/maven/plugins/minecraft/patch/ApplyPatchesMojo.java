@@ -105,7 +105,9 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                                     this.getLog().info("Perform a manual merge for the modified files and confirm by entering \"Y\"");
 
                                     while (true) {
-                                        this.getLog().info("Continue process? [Y/N]");
+                                        this.getLog().info("Continue process?");
+                                        this.getLog().info("Confirm Command: (Y)es / (N)o / (S)kip");
+
                                         int input = System.in.read();
 
                                         if (input == 'N' || input == 'n') {
@@ -113,7 +115,19 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                                             throw new MojoFailureException("Failed to apply patch " + p.toString());
                                         }
 
+                                        if (input == 'S' || input == 's') {
+                                            if (this.execute(new ProcessBuilder("git", "am", "--skip")) != 0) {
+                                                throw new MojoFailureException("Git returned an unexpected error");
+                                            }
+
+                                            break;
+                                        }
+
                                         if (input == 'Y' || input == 'y') {
+                                            if (this.execute(new ProcessBuilder("git", "am", "--continue")) != 0) {
+                                                throw new MojoFailureException("Git returned an unexpected error");
+                                            }
+
                                             break;
                                         }
                                     }
