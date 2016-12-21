@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -78,7 +79,7 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.verifyProperties("module", "gameVersion", "mappingVersion");
 
-        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingVersion(), "source");
+        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
         this.getLog().info("Decompiling module " + this.getModule() + " with version " + this.getGameVersion() + " using MCP " + ("live".equals(this.getMappingVersion()) ? "live mappings" : "mapping version " + this.getMappingVersion()));
 
         try {
@@ -96,14 +97,10 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
      * Populates the source artifact within the local repository.
      */
     private void populateSourceArtifact() throws MojoFailureException {
-        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingVersion(), "source");
+        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
 
         try {
-            this.temporary(3, (m) -> {
-                final Path artifactPath = m[0];
-                final Path strippedPath = m[1];
-                final Path rawPath = m[2];
-
+            this.temporary((artifactPath) -> {
                 final Path mappedPath;
 
                 {
@@ -111,110 +108,125 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                     mappedPath = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
                 }
 
-                this.getLog().info("Stripping dependencies from module");
+                this.temporaryDirectory((tmp) -> {
+                    final Path strippedPath = tmp.resolve("stripped.jar");
+                    final Path ffWorkingDirectory = tmp.resolve("ff");
 
-                try (ZipFile inputFile = new ZipFile(mappedPath.toFile())) {
-                    try (OutputStream outputStream = new FileOutputStream(strippedPath.toFile())) {
-                        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
-                            Enumeration<? extends ZipEntry> entries = inputFile.entries();
+                    this.getLog().info("Stripping dependencies from module");
+                    Files.createDirectory(ffWorkingDirectory);
 
-                            while (entries.hasMoreElements()) {
-                                ZipEntry entry = entries.nextElement();
-                                String name = entry.getName();
+                    try (ZipFile inputFile = new ZipFile(mappedPath.toFile())) {
+                        try (OutputStream outputStream = new FileOutputStream(strippedPath.toFile())) {
+                            try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+                                Enumeration<? extends ZipEntry> entries = inputFile.entries();
 
-                                if (entry.isDirectory() || (!name.startsWith("net") && !includedRegularFiles.contains(name))) {
-                                    continue;
-                                }
+                                while (entries.hasMoreElements()) {
+                                    ZipEntry entry = entries.nextElement();
+                                    String name = entry.getName();
 
-                                zipOutputStream.putNextEntry(new ZipEntry(name));
+                                    if (!name.startsWith("net") && !includedRegularFiles.contains(name)) {
+                                        continue;
+                                    }
 
-                                try (InputStream inputStream = inputFile.getInputStream(entry)) {
-                                    ByteStreams.copy(inputStream, outputStream);
-                                }
-                            }
+                                    zipOutputStream.putNextEntry(new ZipEntry(name));
 
-                            zipOutputStream.closeEntry();
-                        }
-                    }
-                }
-
-                this.getLog().info("Decompiling module");
-
-                Map<String, Integer> ffFlags = new HashMap<>();
-                ffFlags.put(IFernflowerPreferences.DECOMPILE_INNER, 1);
-                ffFlags.put(IFernflowerPreferences.REMOVE_BRIDGE, 0);
-                ffFlags.put(IFernflowerPreferences.REMOVE_SYNTHETIC, 1);
-                ffFlags.put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES, 1);
-                ffFlags.put(IFernflowerPreferences.ASCII_STRING_CHARACTERS, 1);
-                List<String> args = new ArrayList<>();
-
-                ffFlags.forEach((pref, value) -> args.add("-" + pref + "=" + String.valueOf(value)));
-                args.add("-log=ERROR");
-                args.add(strippedPath.toAbsolutePath().toString());
-                args.add(rawPath.toAbsolutePath().toString());
-
-                ConsoleDecompiler.main(args.toArray(new String[0]));
-
-                this.getLog().info("Reformatting code");
-                Formatter formatter = new Formatter();
-
-                try (ZipFile file = new ZipFile(rawPath.toFile())) {
-                    try (FileOutputStream outputStream = new FileOutputStream(artifactPath.toFile())) {
-                        try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
-                            Enumeration<? extends ZipEntry> enumeration = file.entries();
-
-                            while (enumeration.hasMoreElements()) {
-                                ZipEntry entry = enumeration.nextElement();
-                                String name = entry.getName();
-
-                                try (InputStream inputStream = file.getInputStream(entry)) {
-                                    zipOutputStream.putNextEntry(entry);
-
-                                    if (name.endsWith(".java")) {
-                                        zipOutputStream.write(formatter.formatSource(IOUtil.toString(inputStream)).getBytes(StandardCharsets.UTF_8));
-                                    } else if (name.endsWith(".xml")) {
-                                        zipOutputStream.write(IOUtil.toString(inputStream).replaceAll("\r", "").getBytes(StandardCharsets.UTF_8));
-                                    } else {
-                                        IOUtil.copy(inputStream, zipOutputStream);
+                                    if (!entry.isDirectory()) {
+                                        try (InputStream inputStream = inputFile.getInputStream(entry)) {
+                                            ByteStreams.copy(inputStream, zipOutputStream);
+                                        }
                                     }
                                 }
-                            }
 
-                            zipOutputStream.closeEntry();
-                        }
-                    }
-                }
-
-                this.temporary((modelPath) -> {
-                    this.getLog().info("Storing module sources as artifact " + this.getArtifactCoordinateString(artifact));
-
-                    {
-                        Model model = new Model();
-
-                        model.setGroupId(MINECRAFT_GROUP_ID);
-                        model.setArtifactId(this.getModule());
-                        model.setVersion(this.getMappingVersion());
-                        model.setPackaging("jar");
-
-                        Organization organization = new Organization();
-                        organization.setName("Mojang");
-                        organization.setUrl("http://mojang.com");
-                        model.setOrganization(organization);
-
-                        License license = new License();
-                        license.setName("Mojang EULA");
-                        license.setUrl("https://account.mojang.com/terms");
-                        license.setDistribution("manual");
-                        model.addLicense(license);
-
-                        try (FileOutputStream outputStream = new FileOutputStream(modelPath.toFile())) {
-                            try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
-                                (new MavenXpp3Writer()).write(writer, model);
+                                zipOutputStream.closeEntry();
                             }
                         }
                     }
 
-                    this.installArtifact(artifact, modelPath, artifactPath);
+                    this.getLog().info("Decompiling module");
+
+                    Map<String, Integer> ffFlags = new HashMap<>();
+                    ffFlags.put(IFernflowerPreferences.DECOMPILE_INNER, 1);
+                    ffFlags.put(IFernflowerPreferences.REMOVE_BRIDGE, 0);
+                    ffFlags.put(IFernflowerPreferences.REMOVE_SYNTHETIC, 1);
+                    ffFlags.put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES, 1);
+                    ffFlags.put(IFernflowerPreferences.ASCII_STRING_CHARACTERS, 1);
+                    List<String> args = new ArrayList<>();
+
+                    ffFlags.forEach((pref, value) -> args.add("-" + pref + "=" + String.valueOf(value)));
+                    args.add("-log=ERROR");
+                    args.add(strippedPath.toAbsolutePath().toString());
+                    args.add(ffWorkingDirectory.toAbsolutePath().toString());
+
+                    ConsoleDecompiler.main(args.toArray(new String[0]));
+
+
+                    tmp = ffWorkingDirectory.resolve(strippedPath.getFileName());
+
+                    if (Files.notExists(tmp)) {
+                        throw new MojoFailureException("Failed to decompile module: Unknown fernflower error");
+                    }
+
+                    this.getLog().info("Reformatting code");
+                    Formatter formatter = new Formatter();
+
+                    try (ZipFile file = new ZipFile(tmp.toFile())) {
+                        try (FileOutputStream outputStream = new FileOutputStream(artifactPath.toFile())) {
+                            try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
+                                Enumeration<? extends ZipEntry> enumeration = file.entries();
+
+                                while (enumeration.hasMoreElements()) {
+                                    ZipEntry entry = enumeration.nextElement();
+                                    String name = entry.getName();
+
+                                    try (InputStream inputStream = file.getInputStream(entry)) {
+                                        zipOutputStream.putNextEntry(new ZipEntry(name));
+
+                                        if (name.endsWith(".java")) {
+                                            zipOutputStream.write(formatter.formatSource(IOUtil.toString(inputStream)).getBytes(StandardCharsets.UTF_8));
+                                        } else if (name.endsWith(".xml")) {
+                                            zipOutputStream.write(IOUtil.toString(inputStream).replaceAll("\r", "").getBytes(StandardCharsets.UTF_8));
+                                        } else {
+                                            ByteStreams.copy(inputStream, zipOutputStream);
+                                        }
+                                    }
+                                }
+
+                                zipOutputStream.closeEntry();
+                            }
+                        }
+                    }
+
+                    this.temporary((modelPath) -> {
+                        this.getLog().info("Storing module sources as artifact " + this.getArtifactCoordinateString(artifact));
+
+                        {
+                            Model model = new Model();
+
+                            model.setGroupId(MINECRAFT_GROUP_ID);
+                            model.setArtifactId(this.getModule());
+                            model.setVersion(this.getMappingVersion());
+                            model.setPackaging("jar");
+
+                            Organization organization = new Organization();
+                            organization.setName("Mojang");
+                            organization.setUrl("http://mojang.com");
+                            model.setOrganization(organization);
+
+                            License license = new License();
+                            license.setName("Mojang EULA");
+                            license.setUrl("https://account.mojang.com/terms");
+                            license.setDistribution("manual");
+                            model.addLicense(license);
+
+                            try (FileOutputStream outputStream = new FileOutputStream(modelPath.toFile())) {
+                                try (OutputStreamWriter writer = new OutputStreamWriter(outputStream)) {
+                                    (new MavenXpp3Writer()).write(writer, model);
+                                }
+                            }
+                        }
+
+                        this.installArtifact(artifact, modelPath, artifactPath);
+                    });
                 });
             });
         } catch (ArtifactInstallationException ex) {
