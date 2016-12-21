@@ -75,7 +75,7 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                     ZipEntry entry = enumeration.nextElement();
                     String name = entry.getName();
 
-                    if (name.endsWith(".java")) {
+                    if (name.endsWith(".java") || entry.isDirectory()) {
                         continue;
                     }
 
