@@ -45,7 +45,7 @@ For an example configuration, refer to the [Example Project](example/pom.xml).
 | apply-patches         | Generate Sources    | Applies all patches within the patches directory to the local git repository.                                                |
 | generated-patches     | Generate Sources    | Re-generates patches based on the commit history within the local git repository.                                            |
     
-Generally it is recommended to set `RESOURCEDirectory` to a value which is cleaned automatically in
+Generally it is recommended to set `resourceDirectory` to a value which is cleaned automatically in
 order to indicate to other developers that modifications to these files will be overridden.
 
 In addition all users should configure their IDEs to be able to execute
