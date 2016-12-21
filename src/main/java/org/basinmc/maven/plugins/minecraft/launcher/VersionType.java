@@ -16,6 +16,10 @@
  */
 package org.basinmc.maven.plugins.minecraft.launcher;
 
+import java.util.NoSuchElementException;
+
+import javax.annotation.Nonnull;
+
 /**
  * Provides a list of known (and technically unknown) types of releases as returned by the launcher
  * metadata API.
@@ -50,5 +54,17 @@ public enum VersionType {
     /**
      * A release type which has not yet classified within our client implementation.
      */
-    UNKNOWN
+    UNKNOWN;
+
+    /**
+     * Retrieves a version type based on a string representation.
+     */
+    @Nonnull
+    public static VersionType fromString(@Nonnull String version) {
+        try {
+            return valueOf(version.toUpperCase());
+        } catch (NoSuchElementException ex) {
+            return UNKNOWN;
+        }
+    }
 }

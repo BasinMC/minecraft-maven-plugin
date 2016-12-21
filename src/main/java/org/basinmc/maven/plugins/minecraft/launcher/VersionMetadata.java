@@ -39,9 +39,9 @@ public class VersionMetadata {
     private final DownloadDescriptorMap downloads;
 
     @JsonCreator
-    public VersionMetadata(@Nonnull @JsonProperty(value = "id", required = true) String id, @Nonnull @JsonProperty(value = "type", required = true) VersionType type, @Nonnull @JsonProperty(value = "download", required = true) DownloadDescriptorMap downloads) {
+    public VersionMetadata(@Nonnull @JsonProperty(value = "id", required = true) String id, @Nonnull @JsonProperty(value = "type", required = true) String type, @Nonnull @JsonProperty(value = "download", required = true) DownloadDescriptorMap downloads) {
         this.id = id;
-        this.type = type;
+        this.type = VersionType.fromString(type);
         this.downloads = downloads;
     }
 

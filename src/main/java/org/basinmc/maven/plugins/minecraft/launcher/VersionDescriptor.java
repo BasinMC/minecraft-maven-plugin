@@ -47,16 +47,8 @@ public class VersionDescriptor {
 
     @JsonCreator
     public VersionDescriptor(@Nonnull @JsonProperty(value = "id", required = true) String id, @Nonnull @JsonProperty(value = "type", required = true) String type, @Nonnull @JsonProperty(value = "url", required = true) URL url) {
-        VersionType tmp;
-
-        try {
-            tmp = VersionType.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            tmp = VersionType.UNKNOWN;
-        }
-
         this.id = id;
-        this.type = tmp;
+        this.type = VersionType.fromString(type);
         this.url = url;
     }
 
