@@ -51,6 +51,11 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
 
         this.getLog().info("Applying patches");
 
+        if (Files.notExists(this.getPatchDirectory().toPath())) {
+            this.getLog().warn("Skipping patching process - Patch directory does not exist");
+            return;
+        }
+
         // abort any pending merges before attempting anything else
         try {
             if (this.execute(new ProcessBuilder("git", "am", "--abort")) != 0) {
