@@ -114,7 +114,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
     private void populateMcpMappingsArtifact() throws MojoFailureException {
         try {
             this.temporary((a) -> {
-                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, MCP_ARTIFACT_ID, this.getGameVersion(), "zip");
+                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, MCP_ARTIFACT_ID, ("live".equals(this.getMappingVersion()) ? MCP_LIVE_VERSION : this.getMappingVersion()), "zip");
 
                 if ("live".equals(this.getMappingVersion())) {
                     this.getLog().warn(
@@ -167,7 +167,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
 
                         model.setGroupId(MINECRAFT_GROUP_ID);
                         model.setArtifactId(MCP_ARTIFACT_ID);
-                        model.setVersion(("live".equals(this.getMappingVersion()) ? MCP_LIVE_VERSION : this.getMappingVersion()));
+                        model.setVersion(artifact.getVersion());
                         model.setPackaging("zip");
 
                         Organization organization = new Organization();
