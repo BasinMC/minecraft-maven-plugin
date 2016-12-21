@@ -65,8 +65,8 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     private File sourceDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/resource", required = true)
     private File resourceDirectory;
-    @Parameter(name = "force", property = "minecraft.force")
-    private boolean forced;
+    @Parameter(property = "minecraft.force")
+    private boolean force;
     // </editor-fold>
 
     // <editor-fold desc="Component Getters">
@@ -118,7 +118,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     }
 
     public boolean isForced() {
-        return this.forced;
+        return this.force;
     }
 
     // </editor-fold>
