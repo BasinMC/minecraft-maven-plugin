@@ -129,7 +129,6 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                                 {
                                     this.fetch(new URL(String.format(MCP_LIVE_URL, "fields")).toURI(), zip);
                                 }
-                                zip.closeEntry();
                             }
                             {
                                 ZipEntry entry = new ZipEntry("methods.csv");
@@ -137,7 +136,6 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                                 {
                                     this.fetch(new URL(String.format(MCP_LIVE_URL, "methods")).toURI(), zip);
                                 }
-                                zip.closeEntry();
                             }
                             {
                                 ZipEntry entry = new ZipEntry("params.csv");
@@ -145,8 +143,9 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                                 {
                                     this.fetch(new URL(String.format(MCP_LIVE_URL, "params")).toURI(), zip);
                                 }
-                                zip.closeEntry();
                             }
+
+                            zip.closeEntry();
                         }
                     }
                 } else {
@@ -183,7 +182,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                         }
                     }
 
-                    this.installArtifact(artifact, a, m);
+                    this.installArtifact(artifact, m, a);
                 });
             });
         } catch (IOException ex) {

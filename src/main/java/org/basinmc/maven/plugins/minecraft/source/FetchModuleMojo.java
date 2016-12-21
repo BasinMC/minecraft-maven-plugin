@@ -119,7 +119,7 @@ public class FetchModuleMojo extends AbstractArtifactMojo {
                     }
                 }
 
-                this.installArtifact(artifact, a, m);
+                this.installArtifact(artifact, m, a);
             });
         });
     }

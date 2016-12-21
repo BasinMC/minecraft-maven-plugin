@@ -201,7 +201,7 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
                         }
                     }
 
-                    this.installArtifact(artifact, a, m);
+                    this.installArtifact(artifact, m, a);
                 });
             });
         } catch (ArtifactInstallationException ex) {

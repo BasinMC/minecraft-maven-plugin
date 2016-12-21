@@ -122,20 +122,18 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                                 ZipEntry entry = entries.nextElement();
                                 String name = entry.getName();
 
-                                if (!name.startsWith("net") && !includedRegularFiles.contains(name)) {
+                                if (entry.isDirectory() || (!name.startsWith("net") && !includedRegularFiles.contains(name))) {
                                     continue;
                                 }
 
-                                zipOutputStream.putNextEntry(entry);
+                                zipOutputStream.putNextEntry(new ZipEntry(name));
 
-                                if (!entry.isDirectory()) {
-                                    try (InputStream inputStream = inputFile.getInputStream(entry)) {
-                                        ByteStreams.copy(inputStream, outputStream);
-                                    }
-
-                                    zipOutputStream.closeEntry();
+                                try (InputStream inputStream = inputFile.getInputStream(entry)) {
+                                    ByteStreams.copy(inputStream, outputStream);
                                 }
                             }
+
+                            zipOutputStream.closeEntry();
                         }
                     }
                 }
@@ -179,10 +177,10 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                                     } else {
                                         IOUtil.copy(inputStream, zipOutputStream);
                                     }
-
-                                    zipOutputStream.closeEntry();
                                 }
                             }
+
+                            zipOutputStream.closeEntry();
                         }
                     }
                 }
@@ -216,7 +214,7 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                         }
                     }
 
-                    this.installArtifact(artifact, artifactPath, modelPath);
+                    this.installArtifact(artifact, modelPath, artifactPath);
                 });
             });
         } catch (ArtifactInstallationException ex) {
