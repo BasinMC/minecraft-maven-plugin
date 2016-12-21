@@ -120,6 +120,10 @@ public class InitializeRepositoryMojo extends AbstractArtifactMojo {
                     .setMessage("Added decompiled sources.")
                     .call();
 
+            git.branchCreate()
+                    .setName("upstream")
+                    .call();
+
             this.getProject().addCompileSourceRoot(this.getSourceDirectory().toString());
         } catch (GitAPIException ex) {
             throw new MojoFailureException("Failed to execute Git command: " + ex.getMessage(), ex);
