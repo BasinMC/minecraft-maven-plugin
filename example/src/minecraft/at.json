@@ -1,0 +1,10 @@
+{
+  "net.minecraft.server.MinecraftServer": {
+    "fields": {
+      "hostname": "public"
+    },
+    "methods": {
+      "main": "protected"
+    }
+  }
+}

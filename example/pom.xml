@@ -115,6 +115,7 @@
                                         <gameVersion>1.10.2</gameVersion>
                                         <mappingVersion>stable-29</mappingVersion>
                                         <module>server</module>
+                                        <accessTransformation>${project.basedir}/src/minecraft/at.json</accessTransformation>
                                 </configuration>
 
                                 <executions>
