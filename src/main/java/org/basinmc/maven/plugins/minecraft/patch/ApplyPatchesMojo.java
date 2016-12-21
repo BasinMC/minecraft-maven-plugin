@@ -122,7 +122,7 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                                         }
 
                                         if (input == 'S' || input == 's') {
-                                            if (this.execute(new ProcessBuilder("git", "am", "--skip")) != 0) {
+                                            if (this.execute(new ProcessBuilder("git", "am", "--skip").directory(this.getSourceDirectory())) != 0) {
                                                 throw new MojoFailureException("Git returned an unexpected error");
                                             }
 
@@ -130,7 +130,7 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                                         }
 
                                         if (input == 'Y' || input == 'y') {
-                                            if (this.execute(new ProcessBuilder("git", "am", "--continue")) != 0) {
+                                            if (this.execute(new ProcessBuilder("git", "am", "--continue").directory(this.getSourceDirectory())) != 0) {
                                                 throw new MojoFailureException("Git returned an unexpected error");
                                             }
 
