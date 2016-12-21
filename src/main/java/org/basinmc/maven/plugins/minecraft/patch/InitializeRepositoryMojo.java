@@ -17,6 +17,8 @@
 package org.basinmc.maven.plugins.minecraft.patch;
 
 import com.google.common.io.ByteStreams;
+import com.google.googlejavaformat.java.Formatter;
+import com.google.googlejavaformat.java.FormatterException;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
@@ -133,9 +135,11 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
             Git git = Git.init().setDirectory(this.getSourceDirectory()).call();
 
             AccessTransformationMap transformationMap = null;
+            Formatter formatter = null;
 
             if (this.getAccessTransformation() != null) {
                 transformationMap = AccessTransformationMap.read(this.getAccessTransformation().toPath());
+                formatter = new Formatter();
             }
 
             try (ZipFile file = new ZipFile(sourceArtifact.toFile())) {
@@ -160,7 +164,7 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
                             if (transformationMap != null && transformationMap.getTypeMappings(name).isPresent()) {
                                 JavaClassSource classSource = Roaster.parse(JavaClassSource.class, inputStream);
                                 this.applyAccessTransformation(transformationMap, classSource);
-                                outputChannel.write(ByteBuffer.wrap(classSource.toString().getBytes(StandardCharsets.UTF_8)));
+                                outputChannel.write(ByteBuffer.wrap(formatter.formatSource(classSource.toString()).getBytes(StandardCharsets.UTF_8)));
                             } else {
                                 try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
                                     ByteStreams.copy(channel, outputChannel);
@@ -182,6 +186,8 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
             git.branchCreate()
                     .setName("upstream")
                     .call();
+        } catch (FormatterException ex) {
+            throw new MojoFailureException("Failed to format one or more source files: " + ex.getMessage(), ex);
         } catch (GitAPIException ex) {
             throw new MojoFailureException("Failed to execute Git command: " + ex.getMessage(), ex);
         } catch (IOException ex) {
