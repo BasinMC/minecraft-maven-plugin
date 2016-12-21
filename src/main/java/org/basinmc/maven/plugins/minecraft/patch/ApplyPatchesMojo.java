@@ -56,9 +56,14 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
             return;
         }
 
-        // abort any pending merges before attempting anything else
+        // abort any pending merges before attempting anything else and reset the repository back
+        // to its original state
         try {
             if (this.execute(new ProcessBuilder("git", "am", "--abort")) != 0) {
+                throw new MojoFailureException("Git terminated with an unexpected error");
+            }
+
+            if (this.execute(new ProcessBuilder("git", "reset", "--hard", "upstream")) != 0) {
                 throw new MojoFailureException("Git terminated with an unexpected error");
             }
         } catch (InterruptedException ex) {
