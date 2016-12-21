@@ -110,6 +110,8 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
             } else {
                 this.getLog().info("Skipping repository initialization - Cached");
             }
+
+            this.getProject().addCompileSourceRoot(this.getSourceDirectory().toString());
         } catch (ArtifactResolutionException ex) {
             throw new MojoFailureException("Failed to resolve artifact: " + ex.getMessage(), ex);
         }
@@ -184,8 +186,6 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
             git.branchCreate()
                     .setName("upstream")
                     .call();
-
-            this.getProject().addCompileSourceRoot(this.getSourceDirectory().toString());
         } catch (GitAPIException ex) {
             throw new MojoFailureException("Failed to execute Git command: " + ex.getMessage(), ex);
         } catch (IOException ex) {
