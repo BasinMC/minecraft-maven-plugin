@@ -25,6 +25,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.basinmc.maven.plugins.minecraft.AbstractArtifactMojo;
+import org.basinmc.maven.plugins.minecraft.AbstractMappingMojo;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -51,7 +52,7 @@ import java.util.zip.ZipFile;
         threadSafe = true,
         defaultPhase = LifecyclePhase.GENERATE_SOURCES
 )
-public class InitializeRepositoryMojo extends AbstractArtifactMojo {
+public class InitializeRepositoryMojo extends AbstractMappingMojo {
     private static final String ROOT_COMMIT_AUTHOR_NAME = "Basin";
     private static final String ROOT_COMMIT_AUTHOR_EMAIL = "contact@basinmc.org";
 
@@ -82,7 +83,7 @@ public class InitializeRepositoryMojo extends AbstractArtifactMojo {
         final Path sourceArtifact;
 
         {
-            Artifact a = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingVersion(), "source");
+            Artifact a = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
             sourceArtifact = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
         }
 
@@ -102,6 +103,7 @@ public class InitializeRepositoryMojo extends AbstractArtifactMojo {
                     }
 
                     Path outputPath = this.getSourceDirectory().toPath().resolve(name);
+                    Files.createDirectories(outputPath.getParent());
 
                     try (InputStream inputStream = file.getInputStream(entry)) {
                         try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
