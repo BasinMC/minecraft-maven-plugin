@@ -33,10 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -117,14 +114,12 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                 Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, MCP_ARTIFACT_ID, ("live".equals(this.getMappingVersion()) ? MCP_LIVE_VERSION : this.getMappingVersion()), "zip");
 
                 if ("live".equals(this.getMappingVersion())) {
-                    this.getLog().warn(
-                            "    MCP Live Mappings    \n" +
-                                    " ----------------------- \n" +
-                                    "  This will most likely  \n" +
-                                    "  break your build       \n" +
-                                    " ----------------------- \n" +
-                                    "  USE AT YOUR OWN RISK   \n"
-                    );
+                    this.getLog().warn("    MCP Live Mappings    ");
+                    this.getLog().warn(" ----------------------- ");
+                    this.getLog().warn("  This will most likely  ");
+                    this.getLog().warn("  break your build       ");
+                    this.getLog().warn(" ----------------------- ");
+                    this.getLog().warn("  USE AT YOUR OWN RISK   ");
 
                     try (FileOutputStream outputStream = new FileOutputStream(a.toFile())) {
                         try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
