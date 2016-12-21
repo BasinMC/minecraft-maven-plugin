@@ -30,6 +30,7 @@ import java.nio.file.Path;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -65,6 +66,8 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     private File sourceDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/resource", required = true)
     private File resourceDirectory;
+    @Parameter
+    private File accessTransformation;
     @Parameter(property = "minecraft.force")
     private boolean force;
     // </editor-fold>
@@ -117,10 +120,14 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         return this.resourceDirectory;
     }
 
+    @Nullable
+    public File getAccessTransformation() {
+        return this.accessTransformation;
+    }
+
     public boolean isForced() {
         return this.force;
     }
-
     // </editor-fold>
 
     /**

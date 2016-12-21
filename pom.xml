@@ -30,7 +30,9 @@
 
         <properties>
                 <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
                 <maven.version>2.2.1</maven.version>
+                <roaster.version>2.0.0.Final</roaster.version>
         </properties>
 
         <licenses>
@@ -139,6 +141,19 @@
                         <groupId>com.google.googlejavaformat</groupId>
                         <artifactId>google-java-format</artifactId>
                         <version>1.0</version>
+                </dependency>
+
+                <!-- Source Modification -->
+                <dependency>
+                        <groupId>org.jboss.forge</groupId>
+                        <artifactId>roaster-api</artifactId>
+                        <version>${roaster.version}</version>
+                </dependency>
+                <dependency>
+                        <groupId>org.jboss.forge</groupId>
+                        <artifactId>roaster-jdt</artifactId>
+                        <version>${roaster.version}</version>
+                        <scope>runtime</scope>
                 </dependency>
 
                 <!-- Utility -->

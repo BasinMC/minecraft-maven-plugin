@@ -24,22 +24,35 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.basinmc.maven.plugins.minecraft.AbstractArtifactMojo;
 import org.basinmc.maven.plugins.minecraft.AbstractMappingMojo;
+import org.basinmc.maven.plugins.minecraft.access.AccessTransformationMap;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster.model.JavaType;
+import org.jboss.forge.roaster.model.source.FieldHolderSource;
+import org.jboss.forge.roaster.model.source.FieldSource;
+import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.MethodHolderSource;
+import org.jboss.forge.roaster.model.source.MethodSource;
+import org.jboss.forge.roaster.model.source.VisibilityScopedSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import javax.annotation.Nonnull;
 
 /**
  * Provides a Mojo which initializes the local git repository with its respective contents.
@@ -55,6 +68,32 @@ import java.util.zip.ZipFile;
 public class InitializeRepositoryMojo extends AbstractMappingMojo {
     private static final String ROOT_COMMIT_AUTHOR_NAME = "Basin";
     private static final String ROOT_COMMIT_AUTHOR_EMAIL = "contact@basinmc.org";
+
+    /**
+     * Applies access transformations to a parsed type and all of its nested members.
+     *
+     * TODO: Add support for inheritance to reduce the size of AT configs.
+     */
+    @SuppressWarnings("unchecked")
+    private void applyAccessTransformation(@Nonnull AccessTransformationMap transformationMap, @Nonnull JavaType classSource) {
+        this.getLog().info("Applying access transformations to " + classSource.getQualifiedName());
+
+        transformationMap.getTypeMappings(classSource.getQualifiedName()).ifPresent((t) -> {
+            if (classSource instanceof VisibilityScopedSource) {
+                t.getVisibility().ifPresent(((VisibilityScopedSource) classSource)::setVisibility);
+            }
+
+            if (classSource instanceof FieldHolderSource) {
+                ((List<FieldSource>) ((FieldHolderSource) classSource).getFields()).forEach((f) -> t.getFieldVisibility(f.getName()).ifPresent(f::setVisibility));
+            }
+
+            if (classSource instanceof MethodHolderSource) {
+                ((List<MethodSource>) ((MethodHolderSource) classSource).getMethods()).forEach((m) -> t.getMethodVisibility(m.getName()).ifPresent(m::setVisibility));
+            }
+
+            ((List<JavaType>) classSource.getNestedClasses()).forEach((c) -> this.applyAccessTransformation(transformationMap, c));
+        });
+    }
 
     /**
      * {@inheritDoc}
@@ -91,6 +130,12 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
             Files.createDirectories(this.getSourceDirectory().toPath());
             Git git = Git.init().setDirectory(this.getSourceDirectory()).call();
 
+            AccessTransformationMap transformationMap = null;
+
+            if (this.getAccessTransformation() != null) {
+                transformationMap = AccessTransformationMap.read(this.getAccessTransformation().toPath());
+            }
+
             try (ZipFile file = new ZipFile(sourceArtifact.toFile())) {
                 Enumeration<? extends ZipEntry> enumeration = file.entries();
 
@@ -109,8 +154,18 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
                     }
 
                     try (InputStream inputStream = file.getInputStream(entry)) {
-                        try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
-                            try (FileChannel outputChannel = FileChannel.open(outputPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                        try (FileChannel outputChannel = FileChannel.open(outputPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+                            if (transformationMap != null) {
+                                if (transformationMap.getTypeMappings(name).isPresent()) {
+                                    JavaClassSource classSource = Roaster.parse(JavaClassSource.class, inputStream);
+                                    this.applyAccessTransformation(transformationMap, classSource);
+                                    outputChannel.write(ByteBuffer.wrap(classSource.toString().getBytes(StandardCharsets.UTF_8)));
+
+                                    continue;
+                                }
+                            }
+
+                            try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
                                 ByteStreams.copy(channel, outputChannel);
                             }
                         }
