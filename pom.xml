@@ -124,11 +124,6 @@
 
                 <!-- Mapping -->
                 <dependency>
-                        <groupId>com.opencsv</groupId>
-                        <artifactId>opencsv</artifactId>
-                        <version>3.7</version>
-                </dependency>
-                <dependency>
                         <groupId>net.md-5</groupId>
                         <artifactId>SpecialSource</artifactId>
                         <version>1.7.4</version>
