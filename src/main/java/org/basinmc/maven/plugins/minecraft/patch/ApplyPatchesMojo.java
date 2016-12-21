@@ -86,11 +86,13 @@ public class ApplyPatchesMojo extends AbstractGitCommandMojo {
                         .sorted()
                         .forEachOrdered((p) -> {
                             this.getLog().info("Applying " + p.toString());
-                            List<String> command = new ArrayList<>(Arrays.asList("git", "am", "--ignore-whitespace", "--3way", this.getSourceDirectory().toPath().relativize(p.toAbsolutePath()).toString()));
+                            List<String> command = new ArrayList<>(Arrays.asList("git", "am", "--ignore-whitespace", "--3way"));
 
                             if (this.getSettings().isInteractiveMode()) {
                                 command.add("--reject");
                             }
+
+                            command.add(this.getSourceDirectory().toPath().relativize(p.toAbsolutePath()).toString());
 
                             try {
                                 if (this.execute(new ProcessBuilder(command).directory(this.getSourceDirectory())) != 0) {
