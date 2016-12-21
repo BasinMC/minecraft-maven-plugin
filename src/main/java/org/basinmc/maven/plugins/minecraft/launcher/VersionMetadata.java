@@ -39,7 +39,7 @@ public class VersionMetadata {
     private final DownloadDescriptorMap downloads;
 
     @JsonCreator
-    public VersionMetadata(@Nonnull @JsonProperty(value = "id", required = true) String id, @Nonnull @JsonProperty(value = "type", required = true) String type, @Nonnull @JsonProperty(value = "download", required = true) DownloadDescriptorMap downloads) {
+    public VersionMetadata(@Nonnull @JsonProperty(value = "id", required = true) String id, @Nonnull @JsonProperty(value = "type", required = true) String type, @Nonnull @JsonProperty(value = "downloads", required = true) DownloadDescriptorMap downloads) {
         this.id = id;
         this.type = VersionType.fromString(type);
         this.downloads = downloads;
@@ -73,7 +73,7 @@ public class VersionMetadata {
         private final DownloadDescriptor server;
 
         @JsonCreator
-        public DownloadDescriptorMap(@Nonnull @JsonProperty(value = "client", required = true) DownloadDescriptor client, @Nonnull @JsonProperty(value = "servers", required = true) DownloadDescriptor server) {
+        public DownloadDescriptorMap(@Nonnull @JsonProperty(value = "client", required = true) DownloadDescriptor client, @Nonnull @JsonProperty(value = "server", required = true) DownloadDescriptor server) {
             this.server = server;
             this.client = client;
         }
