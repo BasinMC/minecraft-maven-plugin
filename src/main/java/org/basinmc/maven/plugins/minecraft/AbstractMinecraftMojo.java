@@ -20,6 +20,7 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,8 @@ import javax.annotation.concurrent.ThreadSafe;
 public abstract class AbstractMinecraftMojo extends AbstractMojo {
 
     // <editor-fold desc="Maven Components">
+    @Parameter(property = "project", required = true, readonly = true)
+    protected MavenProject project;
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession session;
     // </editor-fold>
@@ -62,6 +65,11 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     // </editor-fold>
 
     // <editor-fold desc="Component Getters">
+    @Nonnull
+    protected MavenProject getProject() {
+        return this.project;
+    }
+
     @Nonnull
     protected MavenSession getSession() {
         return this.session;
