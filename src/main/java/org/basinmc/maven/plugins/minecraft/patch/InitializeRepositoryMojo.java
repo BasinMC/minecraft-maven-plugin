@@ -157,12 +157,10 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
 
                     try (InputStream inputStream = file.getInputStream(entry)) {
                         try (FileChannel outputChannel = FileChannel.open(outputPath, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
-                            if (transformationMap != null) {
-                                if (transformationMap.getTypeMappings(name).isPresent()) {
-                                    JavaClassSource classSource = Roaster.parse(JavaClassSource.class, inputStream);
-                                    this.applyAccessTransformation(transformationMap, classSource);
-                                    outputChannel.write(ByteBuffer.wrap(classSource.toString().getBytes(StandardCharsets.UTF_8)));
-                                }
+                            if (transformationMap != null && transformationMap.getTypeMappings(name).isPresent()) {
+                                JavaClassSource classSource = Roaster.parse(JavaClassSource.class, inputStream);
+                                this.applyAccessTransformation(transformationMap, classSource);
+                                outputChannel.write(ByteBuffer.wrap(classSource.toString().getBytes(StandardCharsets.UTF_8)));
                             } else {
                                 try (ReadableByteChannel channel = Channels.newChannel(inputStream)) {
                                     ByteStreams.copy(channel, outputChannel);
