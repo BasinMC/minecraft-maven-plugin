@@ -164,6 +164,35 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     }
 
     /**
+     * Creates a "wrapped" temporary directory which will be deleted when the supplied consumer
+     * returns.
+     */
+    protected <E extends Exception> void temporaryDirectory(@Nonnull PathConsumer<E> consumer) throws E, IOException {
+        Path tmp = Files.createTempDirectory("mvn_mc");
+
+        try {
+            consumer.accept(tmp);
+        } finally {
+            try {
+                Files.walk(tmp)
+                        // This custom comparator ensures the deletion process is ordered correctly
+                        // based on the respective file/directory depth since Files#delete will
+                        // refuse to delete the contents of a directory
+                        .sorted((a, b) -> Math.min(1, Math.max(-1, b.getNameCount() - a.getNameCount())))
+                        .forEachOrdered((p) -> {
+                            try {
+                                Files.delete(p);
+                            } catch (IOException ex) {
+                                throw new RuntimeException("Deletion failed: " + ex);
+                            }
+                });
+            } catch (RuntimeException ex) {
+                this.getLog().error("Cannot delete temporary file " + tmp.toAbsolutePath().toString() + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
      * Verifies whether the specified set of configuration properties is within their expected
      * bounds.
      */
