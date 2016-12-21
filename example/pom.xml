@@ -39,13 +39,9 @@
 
         <pluginRepositories>
                 <pluginRepository>
-                        <id>basinmc</id>
-                        <name>BasinMC Public</name>
-                        <url>https://www.basinmc.org/nexus/repository/public/</url>
-
-                        <snapshots>
-                                <enabled>true</enabled>
-                        </snapshots>
+                        <id>basin</id>
+                        <name>Basin</name>
+                        <url>https://www.basinmc.org/nexus/repository/maven-releases/</url>
                 </pluginRepository>
         </pluginRepositories>
 

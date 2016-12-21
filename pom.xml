@@ -75,14 +75,14 @@
 
         <distributionManagement>
                 <repository>
-                        <id>basinmc</id>
-                        <name>BasinMC Stable</name>
+                        <id>basin</id>
+                        <name>Basin</name>
                         <url>https://www.basinmc.org/nexus/repository/maven-releases/</url>
                 </repository>
 
                 <snapshotRepository>
-                        <id>basinmc</id>
-                        <name>BasinMC Snapshot</name>
+                        <id>basin</id>
+                        <name>Basin</name>
                         <url>https://www.basinmc.org/nexus/repository/maven-snapshots/</url>
                 </snapshotRepository>
         </distributionManagement>
