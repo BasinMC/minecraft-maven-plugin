@@ -124,7 +124,7 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                                     ZipEntry entry = entries.nextElement();
                                     String name = entry.getName();
 
-                                    if (!name.startsWith("net") && !includedRegularFiles.contains(name)) {
+                                    if (!name.startsWith("assets") && !name.startsWith("net") && !includedRegularFiles.contains(name)) {
                                         continue;
                                     }
 
