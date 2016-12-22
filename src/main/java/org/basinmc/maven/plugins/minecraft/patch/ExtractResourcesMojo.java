@@ -20,11 +20,12 @@ import com.google.common.io.ByteStreams;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.model.Resource;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.project.MavenProjectHelper;
 import org.basinmc.maven.plugins.minecraft.AbstractMappingMojo;
 
 import java.io.IOException;
@@ -35,7 +36,10 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -51,6 +55,11 @@ import java.util.zip.ZipFile;
         defaultPhase = LifecyclePhase.GENERATE_RESOURCES
 )
 public class ExtractResourcesMojo extends AbstractMappingMojo {
+
+    // <editor-fold desc="Maven Components">
+    @Component
+    private MavenProjectHelper projectHelper;
+    // </editor-fold>
 
     /**
      * {@inheritDoc}
@@ -68,6 +77,8 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                 sourceArtifact = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
             }
 
+            final List<String> resources = new ArrayList<>();
+
             try (ZipFile file = new ZipFile(sourceArtifact.toFile())) {
                 Enumeration<? extends ZipEntry> enumeration = file.entries();
 
@@ -80,6 +91,7 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                     }
 
                     Path outputPath = this.getResourceDirectory().toPath().resolve(name);
+                    resources.add(name);
 
                     if (!Files.isDirectory(outputPath.getParent())) {
                         Files.createDirectories(outputPath.getParent());
@@ -102,14 +114,7 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                 }
             }
 
-            Resource resource = new Resource();
-            resource.setDirectory(this.getResourceDirectory().toString());
-            resource.setTargetPath(".");
-            resource.setFiltering(false);
-            resource.addInclude("*");
-            resource.addInclude("**/*");
-
-            this.getProject().addResource(resource);
+            this.projectHelper.addResource(this.getProject(), this.getResourceDirectory().toString(), resources, Collections.emptyList());
         } catch (ArtifactResolutionException ex) {
             throw new MojoFailureException("Cannot resolve artifact: " + ex.getMessage(), ex);
         } catch (IOException ex) {
