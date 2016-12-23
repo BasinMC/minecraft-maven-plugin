@@ -132,7 +132,7 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
         return this.accessTransformation;
     }
 
-    @Nonnull
+    @Nullable
     public Set<String> getExcludedResources() {
         return this.excludedResources;
     }

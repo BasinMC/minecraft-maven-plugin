@@ -90,7 +90,7 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                         continue;
                     }
 
-                    if (this.getExcludedResources().contains(name)) {
+                    if (this.getExcludedResources() != null && this.getExcludedResources().contains(name)) {
                         this.getLog().info("Skipping resource " + name + " - Excluded by build configuration");
                         continue;
                     }
