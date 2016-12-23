@@ -90,6 +90,11 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
                         continue;
                     }
 
+                    if (this.getExcludedResources().contains(name)) {
+                        this.getLog().info("Skipping resource " + name + " - Excluded by build configuration");
+                        continue;
+                    }
+
                     Path outputPath = this.getResourceDirectory().toPath().resolve(name);
                     resources.add(name);
 
@@ -99,7 +104,7 @@ public class ExtractResourcesMojo extends AbstractMappingMojo {
 
                     if (Files.exists(outputPath)) {
                         if (!entry.getLastModifiedTime().toInstant().isAfter(Files.getLastModifiedTime(outputPath).toInstant())) {
-                            this.getLog().debug("Skipping resource " + name + " - Local file is newer or of equal age");
+                            this.getLog().info("Skipping resource " + name + " - Local file is newer or of equal age");
                             continue;
                         }
                     }

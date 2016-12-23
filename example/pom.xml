@@ -116,6 +116,10 @@
                                         <mappingVersion>stable-29</mappingVersion>
                                         <module>server</module>
                                         <accessTransformation>${project.basedir}/src/minecraft/at.json</accessTransformation>
+
+                                        <excludedResources>
+                                                <excludedResource>log4j2.xml</excludedResource>
+                                        </excludedResources>
                                 </configuration>
 
                                 <executions>

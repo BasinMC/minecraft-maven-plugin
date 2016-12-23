@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -60,14 +61,20 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     private String mappingVersion;
     @Parameter(required = true)
     private String module;
+
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/patch", required = true)
     private File patchDirectory;
     @Parameter(defaultValue = "${project.basedir}/src/minecraft/java", required = true)
     private File sourceDirectory;
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/minecraft", required = true)
     private File resourceDirectory;
+
     @Parameter
     private File accessTransformation;
+
+    @Parameter
+    private Set<String> excludedResources;
+
     @Parameter(property = "minecraft.force")
     private boolean force;
     // </editor-fold>
@@ -123,6 +130,11 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     @Nullable
     public File getAccessTransformation() {
         return this.accessTransformation;
+    }
+
+    @Nonnull
+    public Set<String> getExcludedResources() {
+        return this.excludedResources;
     }
 
     public boolean isForced() {
