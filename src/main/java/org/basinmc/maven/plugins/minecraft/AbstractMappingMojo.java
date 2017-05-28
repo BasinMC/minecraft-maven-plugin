@@ -32,6 +32,22 @@ import javax.annotation.concurrent.ThreadSafe;
 public abstract class AbstractMappingMojo extends AbstractArtifactMojo {
 
     /**
+     * Retrieves a mapped artifact.
+     */
+    @Nonnull
+    protected Artifact getMappedArtifact() {
+        return this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappedArtifactVersion(), MAPPED_CLASSIFIER);
+    }
+
+    /**
+     * Retrieves the version attributed to all mapped binary artifacts.
+     */
+    @Nonnull
+    protected String getMappedArtifactVersion() {
+        return this.getGameVersion() + "-" + this.getSrgVersion() + "-" + ("live".equals(this.getMappingVersion()) ? MCP_LIVE_VERSION : this.getMappingVersion());
+    }
+
+    /**
      * Retrieves a mapping artifact.
      */
     @Nonnull
@@ -40,7 +56,7 @@ public abstract class AbstractMappingMojo extends AbstractArtifactMojo {
     }
 
     /**
-     * Retrieves the version attributed to all mapped artifacts.
+     * Retrieves the version attributed to all mapping artifacts.
      */
     @Nonnull
     protected String getMappingArtifactVersion() {

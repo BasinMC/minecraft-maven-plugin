@@ -200,10 +200,10 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
     private void populateSrgMappingsArtifact() throws MojoFailureException {
         try {
             this.temporary((a) -> {
-                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, SRG_ARTIFACT_ID, this.getGameVersion(), "zip");
+                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, SRG_ARTIFACT_ID, this.getSrgVersion(), "zip");
 
                 this.getLog().info("Storing SRG mappings as artifact " + this.getArtifactCoordinateString(artifact));
-                this.fetch(String.format(SRG_URL, this.getGameVersion()), a);
+                this.fetch(String.format(SRG_URL, this.getSrgVersion()), a);
 
                 this.temporary((m) -> {
                     Model model = new Model();

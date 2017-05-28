@@ -57,6 +57,8 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     // <editor-fold desc="Configuration Properties">
     @Parameter(required = true)
     private String gameVersion;
+    @Parameter
+    private String srgVersion;
     @Parameter(required = true)
     private String mappingVersion;
     @Parameter(required = true)
@@ -100,6 +102,15 @@ public abstract class AbstractMinecraftMojo extends AbstractMojo {
     @Nonnull
     public String getGameVersion() {
         return this.gameVersion;
+    }
+
+    @Nonnull
+    public String getSrgVersion() {
+        if (this.srgVersion == null) {
+            return this.gameVersion;
+        }
+
+        return this.srgVersion;
     }
 
     @Nonnull

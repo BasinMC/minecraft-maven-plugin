@@ -73,8 +73,8 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.verifyProperties("module", "gameVersion", "mappingVersion");
 
-        Artifact artifact = this.getMappingArtifact();
-        this.getLog().info("Mapping module " + this.getModule() + " of version " + this.getGameVersion() + " against MCP " + ("live".equals(this.getMappingVersion()) ? "live mappings" : "version " + this.getMappingVersion()));
+        Artifact artifact = this.getMappedArtifact();
+        this.getLog().info("Mapping module " + this.getModule() + " of version " + this.getGameVersion() + " against SRG " + this.getSrgVersion() + " and MCP " + ("live".equals(this.getMappingVersion()) ? "live mappings" : "version " + this.getMappingVersion()));
 
         try {
             if (!this.findArtifact(artifact).map((p) -> this.isSnapshotArtifactValid(artifact, p)).isPresent()) {
@@ -104,7 +104,7 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
      * Populates the mapped artifact within the local maven repository.
      */
     private void populateMappedArtifact() throws ArtifactResolutionException, MojoFailureException {
-        Artifact artifact = this.getMappingArtifact();
+        Artifact artifact = this.getMappedArtifact();
         final Path minecraftArtifact;
         final Path srgMappingsArtifact;
         final Path mcpMappingsArtifact;
@@ -180,7 +180,7 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
 
                         model.setGroupId(MINECRAFT_GROUP_ID);
                         model.setArtifactId(this.getModule());
-                        model.setVersion(this.getMappingArtifactVersion());
+                        model.setVersion(this.getMappedArtifactVersion());
                         model.setPackaging("jar");
 
                         Organization organization = new Organization();
