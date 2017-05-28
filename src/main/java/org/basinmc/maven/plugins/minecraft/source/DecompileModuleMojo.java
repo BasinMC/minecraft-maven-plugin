@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.googlejavaformat.java.Formatter;
 
+import com.google.googlejavaformat.java.FormatterException;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
@@ -182,7 +183,13 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
                                         zipOutputStream.putNextEntry(new ZipEntry(name));
 
                                         if (name.endsWith(".java")) {
-                                            zipOutputStream.write(formatter.formatSource(IOUtil.toString(inputStream)).getBytes(StandardCharsets.UTF_8));
+                                            try {
+                                                zipOutputStream.write(formatter
+                                                    .formatSource(IOUtil.toString(inputStream))
+                                                    .getBytes(StandardCharsets.UTF_8));
+                                            } catch (FormatterException ex) {
+                                                throw new MojoFailureException("Failed to format source file: " + name + ": " + ex.getMessage(), ex);
+                                            }
                                         } else if (name.endsWith(".xml")) {
                                             zipOutputStream.write(IOUtil.toString(inputStream).replaceAll("\r", "").getBytes(StandardCharsets.UTF_8));
                                         } else {
