@@ -57,7 +57,8 @@ import javax.annotation.concurrent.ThreadSafe;
 public class FetchMappingsMojo extends AbstractArtifactMojo {
     private static final String MCP_URL = "http://export.mcpbot.bspk.rs/mcp_%1$s/%3$s-%2$s/mcp_%1$s-%3$s-%2$s.zip";
     private static final String MCP_LIVE_URL = "http://export.mcpbot.bspk.rs/%s.csv";
-    private static final String SRG_URL = "http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/%1$s/mcp-%1$s-csrg.zip";
+    // private static final String SRG_URL = "http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/%1$s/mcp-%1$s-csrg.zip";
+    private static final String SRG_URL = "http://files.minecraftforge.net/maven/de/oceanlabs/mcp/mcp/%1$s/mcp-%1$s-srg.zip"; // FIXME: Maven lookup
 
     /**
      * {@inheritDoc}
