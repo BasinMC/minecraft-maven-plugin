@@ -68,7 +68,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
 
         try {
             {
-                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, "mappings-srg", this.getGameVersion(), "zip");
+                Artifact artifact = this.createArtifact(MINECRAFT_GROUP_ID, "mappings-srg", this.getSrgVersion(), "zip");
                 this.getLog().info("Fetching SRG mappings for Minecraft " + this.getGameVersion());
 
                 if (!this.findArtifact(artifact).isPresent()) {

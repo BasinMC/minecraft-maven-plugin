@@ -21,7 +21,7 @@
         <!-- Artifact Information -->
         <groupId>org.basinmc.maven.plugins</groupId>
         <artifactId>minecraft-maven-plugin</artifactId>
-        <version>2.2.2</version>
+        <version>2.2.3</version>
         <packaging>maven-plugin</packaging>
 
         <prerequisites>

@@ -115,7 +115,7 @@ public class ApplyMappingsMojo extends AbstractMappingMojo {
         }
 
         {
-            Artifact a = this.createArtifact(MINECRAFT_GROUP_ID, SRG_ARTIFACT_ID, this.getGameVersion(), "zip");
+            Artifact a = this.createArtifact(MINECRAFT_GROUP_ID, SRG_ARTIFACT_ID, this.getSrgVersion(), "zip");
             srgMappingsArtifact = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
         }
 
