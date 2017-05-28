@@ -150,7 +150,7 @@ public class FetchMappingsMojo extends AbstractArtifactMojo {
                     }
                 } else {
                     String[] elements = this.getMappingVersion().split("-");
-                    this.fetch(String.format(MCP_URL, elements[0], this.getGameVersion(), elements[1]), a);
+                    this.fetch(String.format(MCP_URL, elements[0], this.getSrgVersion(), elements[1]), a);
                 }
 
                 this.temporary((m) -> {

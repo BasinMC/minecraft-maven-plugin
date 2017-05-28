@@ -97,14 +97,14 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
      * Populates the source artifact within the local repository.
      */
     private void populateSourceArtifact() throws MojoFailureException {
-        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
+        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappedArtifactVersion(), "source");
 
         try {
             this.temporary((artifactPath) -> {
                 final Path mappedPath;
 
                 {
-                    Artifact a = this.getMappingArtifact();
+                    Artifact a = this.getMappedArtifact();
                     mappedPath = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
                 }
 
@@ -204,7 +204,7 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
 
                             model.setGroupId(MINECRAFT_GROUP_ID);
                             model.setArtifactId(this.getModule());
-                            model.setVersion(this.getMappingVersion());
+                            model.setVersion(this.getMappedArtifactVersion());
                             model.setPackaging("jar");
 
                             Organization organization = new Organization();

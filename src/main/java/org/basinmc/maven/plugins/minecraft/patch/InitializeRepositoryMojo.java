@@ -126,7 +126,7 @@ public class InitializeRepositoryMojo extends AbstractMappingMojo {
         final Path sourceArtifact;
 
         {
-            Artifact a = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
+            Artifact a = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappedArtifactVersion(), "source");
             sourceArtifact = this.findArtifact(a).orElseThrow(() -> new MojoFailureException("Could not locate artifact " + this.getArtifactCoordinateString(a)));
         }
 
