@@ -79,7 +79,7 @@ public class DecompileModuleMojo extends AbstractMappingMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         this.verifyProperties("module", "gameVersion", "mappingVersion");
 
-        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappingArtifactVersion(), "source");
+        Artifact artifact = this.createArtifactWithClassifier(MINECRAFT_GROUP_ID, this.getModule(), this.getMappedArtifactVersion(), "source");
         this.getLog().info("Decompiling module " + this.getModule() + " with version " + this.getGameVersion() + " using MCP " + ("live".equals(this.getMappingVersion()) ? "live mappings" : "mapping version " + this.getMappingVersion()));
 
         try {
